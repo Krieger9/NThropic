@@ -1,2 +1,32 @@
 # NThropic
-.NET Claude access library
+
+NThropic is a .NET library for accessing Anthropic's Claude API. It's currently a work in progress, focusing on chat completions and tool use integration.
+
+## Features
+
+- Chat completions with Claude API
+- Tool use through `ToolAttribute`
+- Orchestration agent for managing conversations
+- Sandbox environment for file operations
+
+## Upcoming Features
+
+- Scriban templates for prompts
+- Claude's Prompt Caching
+- Caching system for System, Tools, and two sets of 'Messages'
+- Sub-agents for specialized tasks
+
+## Project Structure
+
+- `ClaudeApi`: Core project for API interaction
+- `ClaudeApi.Agents`: Sub-agents and features for creating specialist agents
+- `CommandLineHost`: Hosts the OrchestrationAgent and demonstrates basic usage
+
+## Tool Usage Example
+
+Tools can be defined using the `ToolAttribute`:
+
+## License
+
+NThropic is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
