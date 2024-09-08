@@ -1,6 +1,6 @@
 using System;
 
-namespace ClaudiaCore.Tools
+namespace ClaudeApi.Agents.Tools
 {
     public class SecurityException : Exception
     {

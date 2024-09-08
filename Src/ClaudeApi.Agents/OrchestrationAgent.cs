@@ -1,5 +1,5 @@
 ﻿using ClaudeApi.Messages;
-using ClaudiaCore;
+using ClaudeApi.Agents;
 using System;
 using System.Collections.Generic;
 using System.Linq;

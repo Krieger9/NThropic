@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using ClaudeApi.Tools;
 
-namespace ClaudiaCore.Tools
+namespace ClaudeApi.Agents.Tools
 {
     public static class DiskTools
     {

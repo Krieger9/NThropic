@@ -1,7 +1,7 @@
 ﻿using ClaudeApi.Agents.Agents;
 using ClaudeApi.Tools;
 
-namespace ClaudiaCore.Tools
+namespace ClaudeApi.Agents.Tools
 {
     public class Summarize
     {

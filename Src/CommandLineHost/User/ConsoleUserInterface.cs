@@ -1,15 +1,15 @@
-﻿using ClaudiaCore;
+﻿using ClaudeApi.Agents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Claudia.User
+namespace ClaudeApi.Agents.User
 {
     internal class ConsoleUserInterface : IUserInterface
     {
-        private StringBuilder _partialMessageBuilder = new StringBuilder();
+        private readonly StringBuilder _partialMessageBuilder = new ();
 
         public void AddArtifact(string artifact)
         {
@@ -40,7 +40,7 @@ namespace Claudia.User
             _partialMessageBuilder.Clear();
         }
 
-        private void ClearKeyboardBuffer()
+        private static void ClearKeyboardBuffer()
         {
             while (Console.KeyAvailable)
             {
