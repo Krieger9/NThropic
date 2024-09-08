@@ -1,0 +1,11 @@
+{{- if summary_length == null -}}
+    {{ throw "The argument 'summary_length' is required." }}
+{{- end -}}
+
+{{- if tone == null -}}
+    {{ throw "The argument 'tone' is required." }}
+{{- end -}}
+
+Summarize the following text in {{ summary_length }} words using a {{ tone }} tone:
+
+{{ text }}
