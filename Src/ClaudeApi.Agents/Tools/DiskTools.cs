@@ -4,22 +4,22 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using ClaudeApi.Tools;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ClaudeApi.Agents.Tools
 {
-    public static class DiskTools
+    public class DiskTools
     {
-        private static readonly Lazy<string> _sandboxBasePath;
-        private static IConfiguration? _configuration;
+        private readonly Lazy<string> _sandboxBasePath;
+        private readonly IServiceProvider _serviceProvider;
 
-        static DiskTools()
+        public DiskTools(IServiceProvider serviceProvider)
         {
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _sandboxBasePath = new Lazy<string>(() =>
             {
-                if (_configuration == null)
-                    throw new InvalidOperationException("DiskTools has not been initialized with a configuration.");
-
-                var path = _configuration["Sanctuary:SandboxBasePath"];
+                var configuration = _serviceProvider.GetRequiredService<IConfiguration>();
+                var path = configuration["Sanctuary:SandboxBasePath"];
                 if (string.IsNullOrEmpty(path))
                     throw new InvalidOperationException("Sanctuary:SandboxBasePath is not set in the configuration.");
 
@@ -27,14 +27,9 @@ namespace ClaudeApi.Agents.Tools
             });
         }
 
-        public static string SandboxBasePath => _sandboxBasePath.Value;
+        public string SandboxBasePath => _sandboxBasePath.Value;
 
-        public static void Initialize(IConfiguration configuration)
-        {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        }
-
-        private static string GetSafePath(string relativePath)
+        private string GetSafePath(string relativePath)
         {
             var fullPath = Path.GetFullPath(Path.Combine(SandboxBasePath, relativePath));
             if (!fullPath.StartsWith(SandboxBasePath, StringComparison.OrdinalIgnoreCase))
@@ -44,14 +39,14 @@ namespace ClaudeApi.Agents.Tools
         }
 
         [Tool("read_file", "Reads the content of a file from the sandbox")]
-        public static async Task<string> ReadFileAsync(string relativePath)
+        public async Task<string> ReadFileAsync(string relativePath)
         {
             var safePath = GetSafePath(relativePath);
             return await File.ReadAllTextAsync(safePath, Encoding.UTF8);
         }
 
         [Tool("write_file", "Writes content to a file in the sandbox, creating directories if needed")]
-        public static async Task WriteFileAsync(string relativePath, string content)
+        public async Task WriteFileAsync(string relativePath, string content)
         {
             var safePath = GetSafePath(relativePath);
             var directoryPath = Path.GetDirectoryName(safePath) ?? throw new InvalidOperationException("The directory path could not be determined.");
@@ -61,7 +56,7 @@ namespace ClaudeApi.Agents.Tools
         }
 
         [Tool("append_to_file", "Appends content to an existing file in the sandbox, creating directories if needed")]
-        public static async Task AppendToFileAsync(string relativePath, string content)
+        public async Task AppendToFileAsync(string relativePath, string content)
         {
             var safePath = GetSafePath(relativePath);
             var directoryPath = Path.GetDirectoryName(safePath) ?? throw new InvalidOperationException("The directory path could not be determined.");
@@ -71,14 +66,14 @@ namespace ClaudeApi.Agents.Tools
         }
 
         [Tool("file_exists", "Checks if a file exists in the sandbox")]
-        public static bool FileExists(string relativePath)
+        public bool FileExists(string relativePath)
         {
             var safePath = GetSafePath(relativePath);
             return File.Exists(safePath);
         }
 
         [Tool("create_directory", "Creates a new directory in the sandbox")]
-        public static async Task CreateDirectoryAsync(string relativePath)
+        public async Task CreateDirectoryAsync(string relativePath)
         {
             var safePath = GetSafePath(relativePath);
             await Task.Run(() => Directory.CreateDirectory(safePath));

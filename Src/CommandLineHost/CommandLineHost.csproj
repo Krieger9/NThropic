@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClaudeApi.Agents\ClaudeApi.Agents.csproj" />
+    <ProjectReference Include="..\Sanctuary\Sanctuary.csproj" />
   </ItemGroup>
 
   <ItemGroup>

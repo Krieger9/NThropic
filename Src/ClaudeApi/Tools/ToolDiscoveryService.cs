@@ -6,7 +6,7 @@ using NJsonSchema;
 
 namespace ClaudeApi.Tools
 {
-    public class ToolDiscoveryService
+    public class ToolDiscoveryService(IServiceProvider serviceProvider)
     {
         public List<Tool> DiscoverTools(Assembly assembly)
         {
@@ -22,8 +22,10 @@ namespace ClaudeApi.Tools
                 var attribute = method.GetCustomAttribute<ToolAttribute>();
                 var parameters = method.GetParameters();
 
-                var inputSchema = new JsonSchema();
-                inputSchema.Type = JsonObjectType.Object;
+                var inputSchema = new JsonSchema
+                {
+                    Type = JsonObjectType.Object
+                };
 
                 foreach (var parameter in parameters)
                 {
@@ -32,6 +34,13 @@ namespace ClaudeApi.Tools
                         Type = ConvertTypeToJsonObjectType(parameter.ParameterType)
                     };
                     inputSchema.Properties.Add(parameter.Name ?? string.Empty, property);
+                }
+
+                var toolType = method.DeclaringType;
+                if (toolType != null && toolType.GetCustomAttribute<RequiresInitializationAttribute>() != null)
+                {
+                    var initializeMethod = toolType.GetMethod("Initialize", BindingFlags.Static | BindingFlags.Public);
+                    initializeMethod?.Invoke(null, [serviceProvider]);
                 }
 
                 tools.Add(new Tool
@@ -46,7 +55,7 @@ namespace ClaudeApi.Tools
             return tools;
         }
 
-        private JsonObjectType ConvertTypeToJsonObjectType(Type type)
+        private static JsonObjectType ConvertTypeToJsonObjectType(Type type)
         {
             if (type == typeof(string)) return JsonObjectType.String;
             if (type == typeof(int) || type == typeof(long)) return JsonObjectType.Integer;

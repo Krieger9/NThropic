@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClaudeApi.Agents", "ClaudeA
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClaudeApi", "ClaudeApi\ClaudeApi.csproj", "{6467661D-82A0-4747-AB31-852F1A8955A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandLineHost", "CommandLineHost\CommandLineHost.csproj", "{4867F656-A560-4B8B-B73A-33CF850FD837}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommandLineHost", "CommandLineHost\CommandLineHost.csproj", "{4867F656-A560-4B8B-B73A-33CF850FD837}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sanctuary", "Sanctuary\Sanctuary.csproj", "{585387E5-F7A7-4AA4-BA4C-354BCD6748C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{4867F656-A560-4B8B-B73A-33CF850FD837}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4867F656-A560-4B8B-B73A-33CF850FD837}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4867F656-A560-4B8B-B73A-33CF850FD837}.Release|Any CPU.Build.0 = Release|Any CPU
+		{585387E5-F7A7-4AA4-BA4C-354BCD6748C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{585387E5-F7A7-4AA4-BA4C-354BCD6748C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{585387E5-F7A7-4AA4-BA4C-354BCD6748C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{585387E5-F7A7-4AA4-BA4C-354BCD6748C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

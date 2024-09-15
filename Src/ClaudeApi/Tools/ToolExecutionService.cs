@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using ClaudeApi.Messages;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using NJsonSchema;
 
@@ -10,11 +12,17 @@ namespace ClaudeApi.Tools
 {
     public class ToolExecutionService
     {
-        #pragma warning disable IDE0290 // Use primary constructor
+#pragma warning disable IDE0290 // Use primary constructor
         private readonly Dictionary<string, Tool> _tools;
+        private readonly Dictionary<string, object> _toolInstances = [];
+        private readonly IServiceProvider _serviceProvider;
 
-        public ToolExecutionService(List<Tool> tools)
-            => _tools = ValidateAndRegisterTools(tools);
+        // ToolExecutionService.cs
+        public ToolExecutionService(List<Tool> tools, IServiceProvider serviceProvider)
+        {
+            _tools = ValidateAndRegisterTools(tools);
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        }
 
         private static Dictionary<string, Tool> ValidateAndRegisterTools(List<Tool> tools)
         {
@@ -89,7 +97,7 @@ namespace ClaudeApi.Tools
             };
         }
 
-        public async Task<string> ExecuteToolAsync(string toolName, JObject input)
+        public async Task<string> ExecuteToolAsync(string toolName, JObject input, Client client, List<Message> messages)
         {
             if (string.IsNullOrWhiteSpace(toolName))
             {
@@ -110,6 +118,8 @@ namespace ClaudeApi.Tools
             {
                 throw new ArgumentException($"Method for tool '{toolName}' not found.");
             }
+
+            var toolInstance = GetOrCreateToolInstance(tool);
 
             var parameters = tool.Method.GetParameters();
             var args = new object[parameters.Length];
@@ -149,10 +159,23 @@ namespace ClaudeApi.Tools
                     throw new ArgumentException($"Failed to convert input value for parameter '{param.Name}' to type '{param.ParameterType.Name}' in tool '{toolName}': {ex.Message}", ex);
                 }
             }
+
             try
             {
-                var result = tool.Method.Invoke(null, args);
-                return await ProcessToolResult(result, toolName);
+                var result = tool.Method.Invoke(toolInstance, args);
+
+                // Check if the result is a ToolInvokeResult
+                if (result is ToolInvokeResult toolInvokeResult)
+                {
+                    // Call SystemCommand if it is not null
+                    toolInvokeResult.SystemCommand?.Invoke(client, messages);
+
+                    // Use the Value property as the return value
+                    result = toolInvokeResult.Value;
+                }
+
+                var resultString = await ProcessToolResult(result, toolName);
+                return resultString;
             }
             catch (TargetInvocationException ex)
             {
@@ -162,6 +185,26 @@ namespace ClaudeApi.Tools
             {
                 throw new InvalidOperationException($"Unexpected error executing tool '{toolName}': {ex.Message}", ex);
             }
+        }
+
+        private object GetOrCreateToolInstance(Tool tool)
+        {
+            if (tool.Name == null)
+            {
+                throw new ArgumentNullException(nameof(tool), "Tool name cannot be null.");
+            }
+
+            if (tool.Method?.DeclaringType == null)
+            {
+                throw new InvalidOperationException("DeclaringType of the tool's method cannot be null.");
+            }
+
+            if (!_toolInstances.TryGetValue(tool.Name, out var instance))
+            {
+                instance = _serviceProvider.GetRequiredService(tool.Method.DeclaringType);
+                _toolInstances[tool.Name] = instance;
+            }
+            return instance;
         }
 
         private static object? ConvertValue(JToken value, Type targetType, string paramName, string toolName)

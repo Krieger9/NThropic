@@ -17,25 +17,28 @@ namespace ClaudeApi.Agents.Agents
             var prompt = new Prompt("Summarize")
             {
                 Arguments = new Dictionary<string, object>
-                        {
-                            { "input", input }
-                        }
+                {
+                    { "input", input }
+                }
+                .Concat(arguments)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
             };
 
             var history = new List<Message>();
             var systemMessage = new List<ContentBlock>();
-
             var responses = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage);
+
+            var resultBuilder = new StringBuilder();
 
             await foreach (var response in responses)
             {
                 if (response != null)
                 {
-                    return response;
+                    resultBuilder.Append(response);
                 }
             }
 
-            return string.Empty;
+            return resultBuilder.ToString();
         }
     }
 }

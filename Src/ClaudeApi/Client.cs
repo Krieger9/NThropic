@@ -16,6 +16,9 @@ using System.IO;
 using System.Threading.Channels;
 using ClaudeApi.Prompts;
 using Scriban;
+using System.Net.Http;
+using System.IO.Pipelines;
+using System.Reflection;
 
 namespace ClaudeApi
 {
@@ -31,10 +34,11 @@ namespace ClaudeApi
         private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _contextFiles = [];
         private readonly string _promptsFolder;
+        private readonly ISandboxFileManager _sandboxFileManager;
 
         public List<ContentBlock> DefaultSystemMessage { get; set; } = [ContentBlock.FromString("a helpful assistant")];
 
-        public Client(IConfiguration configuration, ILogger<Client> logger, System.Reflection.Assembly toolAssembly, IServiceProvider serviceProvider)
+        public Client(ISandboxFileManager sandboxFileManager, IConfiguration configuration, ILogger<Client> logger, Assembly toolAssembly, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _apiKey = configuration["ClaudeApiKey"] ?? throw new InvalidOperationException("API key is not configured.");
@@ -43,10 +47,12 @@ namespace ClaudeApi
             _httpClient = new HttpClient();
             _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
 
-            _toolDiscoveryService = new ToolDiscoveryService();
-            _discoveredTools = _toolDiscoveryService.DiscoverTools(toolAssembly);
-            _toolExecutionService = new ToolExecutionService(_discoveredTools);
             _serviceProvider = serviceProvider;
+            _toolDiscoveryService = new ToolDiscoveryService(_serviceProvider);
+            _discoveredTools = _toolDiscoveryService.DiscoverTools(toolAssembly);
+            _toolExecutionService = new ToolExecutionService(_discoveredTools, serviceProvider);
+
+            _sandboxFileManager = sandboxFileManager;
 
             _logger.LogInformation("Client initialized with {ToolCount} discovered tools", _discoveredTools.Count);
         }
@@ -97,7 +103,7 @@ namespace ClaudeApi
             var userMessage = new Message
             {
                 Role = "user",
-                Content = [ ContentBlock.FromString(userInput) ]
+                Content = [ContentBlock.FromString(userInput)]
             };
 
             history.Add(userMessage);
@@ -138,10 +144,11 @@ namespace ClaudeApi
             return new Message
             {
                 Role = "user",
-                Content = [ ContentBlock.FromString(renderedContent) ]
+                Content = [ContentBlock.FromString(renderedContent)]
             };
         }
 
+        // Client.cs
         private async Task ProcessConversationInternalAsync(
             ChannelWriter<string> writer,
             List<Message> messages,
@@ -173,7 +180,8 @@ namespace ClaudeApi
                             ]
                         };
                         messages.Add(message);
-                        var result = await ExecuteToolAsync(toolUse);
+
+                        var result = await ExecuteToolAsync(toolUse, messages);
                         toolCompletionQueue.Add(result);
                     };
 
@@ -210,11 +218,11 @@ namespace ClaudeApi
             }
         }
 
-        private async Task<ToolResult> ExecuteToolAsync(ToolUse toolUse)
+        private async Task<ToolResult> ExecuteToolAsync(ToolUse toolUse, List<Message> messages)
         {
             try
             {
-                var result = await _toolExecutionService.ExecuteToolAsync(toolUse.ToolName, toolUse.Input);
+                var result = await _toolExecutionService.ExecuteToolAsync(toolUse.ToolName, toolUse.Input, this, messages);
                 return new ToolResult(toolUse.Id, result);
             }
             catch (Exception ex)
@@ -241,7 +249,7 @@ namespace ClaudeApi
 
             var use_system_message = systemMessage.Last().CacheControl = _ephemeralCacheControl;
 
-            var contextBlocks = CreateContextBlocks();
+            var contextBlocks = await CreateContextBlocksAsync();
             systemMessage.AddRange(contextBlocks);
 
             var request = new MessagesRequest
@@ -255,9 +263,6 @@ namespace ClaudeApi
                 Tools = use_tools.ToList()
             };
 
-            var json = JsonConvert.SerializeObject(request);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
             _httpClient.DefaultRequestHeaders.Remove("anthropic-version");
             _httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
             _httpClient.DefaultRequestHeaders.Remove("anthropic-beta");
@@ -265,16 +270,115 @@ namespace ClaudeApi
 
             _logger.LogInformation("Sending streaming request to Claude API. Model: {Model}, MaxTokens: {MaxTokens}, Temperature: {Temperature}", model, maxTokens, temperature);
 
+            var pipe = new Pipe();
+
+            // Use StreamContent and provide the pipe reader stream.
+            var content = new StreamContent(pipe.Reader.AsStream());
+
+            // Start writing data to the pipe.
+            _ = Task.Run(async () =>
+            {
+                await using (var writer = new StreamWriter(pipe.Writer.AsStream(), new UTF8Encoding(false)))
+                await using (var jsonWriter = new JsonTextWriter(writer))
+                {
+                    var serializer = new JsonSerializer();
+                    jsonWriter.WriteStartObject();
+
+                    // Write the request properties
+                    jsonWriter.WritePropertyName("model");
+                    jsonWriter.WriteValue(request.Model);
+
+                    jsonWriter.WritePropertyName("system");
+                    serializer.Serialize(jsonWriter, request.SystemMessage);
+
+                    jsonWriter.WritePropertyName("messages");
+                    jsonWriter.WriteStartArray();
+
+                    // Collect file content messages!
+                    var fileMessages = new List<Message>();
+                    for (var i = 0; i < _contextFiles.Count; i++)
+                    {
+                        var filePath = _contextFiles[i];
+                        if (File.Exists(filePath))
+                        {
+                            var fileName = Path.GetFileName(filePath);
+
+                            await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                            using var fileReader = new StreamReader(fileStream);
+                            string? line;
+                            var is_last_file = i == _contextFiles.Count - 1;
+                            while ((line = await fileReader.ReadLineAsync()) != null)
+                            {
+                                var contentMessage = new Message
+                                {
+                                    Role = "user",
+                                    Content = [ContentBlock.FromString(line, is_last_file ? _ephemeralCacheControl : null)]
+                                };
+                                fileMessages.Add(contentMessage);
+                            }
+                        }
+                    }
+
+                    // Set CacheControl on the last message's last content block
+                    if (fileMessages.Count > 0)
+                    {
+                        var lastMessage = fileMessages.Last();
+                        if (lastMessage?.Content?.Count > 0)
+                        {
+                            lastMessage.Content.Last().CacheControl = _ephemeralCacheControl;
+                        }
+                    }
+
+                    // Serialize file messages
+                    foreach (var fileMessage in fileMessages)
+                    {
+                        serializer.Serialize(jsonWriter, fileMessage);
+                    }
+
+                    // Write the existing messages
+                    for (int i = 0; i < request.Messages.Count; i++)
+                    {
+                        var message = request.Messages[i];
+                        if (i == request.Messages.Count - 1 && message?.Content?.Count > 0)
+                        {
+                            message.Content.Last().CacheControl = _ephemeralCacheControl;
+                        }
+                        serializer.Serialize(jsonWriter, message);
+                    }
+
+
+                    jsonWriter.WriteEndArray();
+
+                    // Write the remaining request properties
+                    jsonWriter.WritePropertyName("max_tokens");
+                    jsonWriter.WriteValue(request.MaxTokens);
+
+                    jsonWriter.WritePropertyName("temperature");
+                    jsonWriter.WriteValue(request.Temperature);
+
+                    jsonWriter.WritePropertyName("stream");
+                    jsonWriter.WriteValue(request.Stream);
+
+                    jsonWriter.WritePropertyName("tools");
+                    serializer.Serialize(jsonWriter, request.Tools);
+
+                    jsonWriter.WriteEndObject();
+                }
+
+                // Complete the pipe so the reader knows no more data is coming.
+                pipe.Writer.Complete();
+            });
+
             return await _httpClient.PostAsync("https://api.anthropic.com/v1/messages", content);
         }
 
-        private List<ContentBlock> CreateContextBlocks()
+        private async Task<List<ContentBlock>> CreateContextBlocksAsync()
         {
             var contextBlocks = new List<ContentBlock>();
 
             foreach (var filePath in _contextFiles)
             {
-                if (!File.Exists(filePath))
+                if (!_sandboxFileManager.FileExists(filePath))
                 {
                     _logger.LogWarning("Context file not found: {FilePath}", filePath);
                     continue;
@@ -282,7 +386,9 @@ namespace ClaudeApi
 
                 try
                 {
-                    var fileContent = File.ReadAllText(filePath);
+                    await using var fileStream = await _sandboxFileManager.OpenReadAsync(filePath);
+                    using var reader = new StreamReader(fileStream);
+                    var fileContent = await reader.ReadToEndAsync();
                     var fileName = Path.GetFileName(filePath);
 
                     contextBlocks.Add(ContentBlock.FromString($"Content of file '{fileName}':", _ephemeralCacheControl));
@@ -302,7 +408,6 @@ namespace ClaudeApi
 
             return contextBlocks;
         }
-
         private static Message CreateToolResultMessage(ToolResult toolResult)
         {
             var message = new Message

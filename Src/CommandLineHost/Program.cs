@@ -1,11 +1,13 @@
 ﻿
 using ClaudeApi;
 using ClaudeApi.Agents;
+using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.Agents.Tools;
 using ClaudeApi.Agents.User;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Sanctuary;
 
 class Program
 {
@@ -17,6 +19,9 @@ class Program
 
         // Build the service provider
         var serviceProvider = serviceCollection.BuildServiceProvider();
+
+        // Register the service provider itself
+        serviceCollection.AddSingleton<IServiceProvider>(serviceProvider);
 
         // Get the ChatBot instance from the service provider
         var chatBot = serviceProvider.GetRequiredService<OrchestrationAgent>();
@@ -42,6 +47,7 @@ class Program
 
         // Register dependencies
         services.AddSingleton<Client>(serviceProvider => new Client(
+            serviceProvider.GetRequiredService<ISandboxFileManager>(),
             serviceProvider.GetRequiredService<IConfiguration>(),
             serviceProvider.GetRequiredService<ILogger<Client>>(),
             typeof(TestTools).Assembly,
@@ -49,7 +55,14 @@ class Program
         ));
         services.AddSingleton<IUserInterface, ConsoleUserInterface>();
         services.AddSingleton<OrchestrationAgent>();
-        DiskTools.Initialize(configuration);
+
+        // Register NThropic agents
+        var client = services.BuildServiceProvider().GetRequiredService<Client>();
+        services.AddNThropicAgents(client);
+
+        // Register ISandboxFileManager
+        services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
+
         // Optionally, configure other services here
     }
 }
