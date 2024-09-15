@@ -25,6 +25,17 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 ## Tool Usage Example
 
 Tools can be defined using the `ToolAttribute`:
+```
+public class TestTools
+    {
+        [Tool("test_echo", "Echoes back the input string")]
+        public static string TestEcho(string input)
+        {
+            return $"Echo: {input}";
+        }
+    }
+```
+
 
 ## License
 
