@@ -132,8 +132,7 @@ namespace ClaudeApi
                 throw new FileNotFoundException($"The prompt file '{filePath}' does not exist.");
             }
 
-            var templateContent = await File.ReadAllTextAsync(filePath);
-            var template = Template.Parse(templateContent);
+            var templateContent = await File.ReadAllTextAsync(filePath); var template = Template.Parse(templateContent);
 
             if (template.HasErrors)
             {
@@ -148,7 +147,6 @@ namespace ClaudeApi
             };
         }
 
-        // Client.cs
         private async Task ProcessConversationInternalAsync(
             ChannelWriter<string> writer,
             List<Message> messages,
@@ -247,11 +245,6 @@ namespace ClaudeApi
             });
             use_tools.Last().CacheControl = _ephemeralCacheControl;
 
-            var use_system_message = systemMessage.Last().CacheControl = _ephemeralCacheControl;
-
-            var contextBlocks = await CreateContextBlocksAsync();
-            systemMessage.AddRange(contextBlocks);
-
             var request = new MessagesRequest
             {
                 Model = model,
@@ -289,51 +282,40 @@ namespace ClaudeApi
                     jsonWriter.WriteValue(request.Model);
 
                     jsonWriter.WritePropertyName("system");
-                    serializer.Serialize(jsonWriter, request.SystemMessage);
 
-                    jsonWriter.WritePropertyName("messages");
-                    jsonWriter.WriteStartArray();
-
-                    // Collect file content messages!
-                    var fileMessages = new List<Message>();
+                    // Collect and concatenate file content messages into a single string
+                    var fileContentBuilder = new StringBuilder();
                     for (var i = 0; i < _contextFiles.Count; i++)
                     {
                         var filePath = _contextFiles[i];
-                        if (File.Exists(filePath))
+                        if (_sandboxFileManager.FileExists(filePath))
                         {
-                            var fileName = Path.GetFileName(filePath);
-
-                            await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+                            await using var fileStream = await _sandboxFileManager.OpenReadAsync(filePath);
                             using var fileReader = new StreamReader(fileStream);
-                            string? line;
-                            var is_last_file = i == _contextFiles.Count - 1;
-                            while ((line = await fileReader.ReadLineAsync()) != null)
+                            string fileContent = await fileReader.ReadToEndAsync();
+                            fileContentBuilder.AppendLine($"### {Path.GetFileName(filePath)} ###");
+                            fileContentBuilder.AppendLine(fileContent);
+
+                            if (i < _contextFiles.Count - 1)
                             {
-                                var contentMessage = new Message
-                                {
-                                    Role = "user",
-                                    Content = [ContentBlock.FromString(line, is_last_file ? _ephemeralCacheControl : null)]
-                                };
-                                fileMessages.Add(contentMessage);
+                                fileContentBuilder.AppendLine();
                             }
                         }
                     }
 
-                    // Set CacheControl on the last message's last content block
-                    if (fileMessages.Count > 0)
+                    // Make a copy of systemMessage for temporary use
+                    var tempSystemMessage = new List<ContentBlock>(request.SystemMessage);
+
+                    // Add the concatenated content to the system message if there is any content
+                    if (fileContentBuilder.Length > 0)
                     {
-                        var lastMessage = fileMessages.Last();
-                        if (lastMessage?.Content?.Count > 0)
-                        {
-                            lastMessage.Content.Last().CacheControl = _ephemeralCacheControl;
-                        }
+                        tempSystemMessage.Add(ContentBlock.FromString(fileContentBuilder.ToString(), _ephemeralCacheControl));
                     }
 
-                    // Serialize file messages
-                    foreach (var fileMessage in fileMessages)
-                    {
-                        serializer.Serialize(jsonWriter, fileMessage);
-                    }
+                    serializer.Serialize(jsonWriter, tempSystemMessage);
+
+                    jsonWriter.WritePropertyName("messages");
+                    jsonWriter.WriteStartArray();
 
                     // Write the existing messages
                     for (int i = 0; i < request.Messages.Count; i++)
@@ -345,7 +327,6 @@ namespace ClaudeApi
                         }
                         serializer.Serialize(jsonWriter, message);
                     }
-
 
                     jsonWriter.WriteEndArray();
 
@@ -372,42 +353,6 @@ namespace ClaudeApi
             return await _httpClient.PostAsync("https://api.anthropic.com/v1/messages", content);
         }
 
-        private async Task<List<ContentBlock>> CreateContextBlocksAsync()
-        {
-            var contextBlocks = new List<ContentBlock>();
-
-            foreach (var filePath in _contextFiles)
-            {
-                if (!_sandboxFileManager.FileExists(filePath))
-                {
-                    _logger.LogWarning("Context file not found: {FilePath}", filePath);
-                    continue;
-                }
-
-                try
-                {
-                    await using var fileStream = await _sandboxFileManager.OpenReadAsync(filePath);
-                    using var reader = new StreamReader(fileStream);
-                    var fileContent = await reader.ReadToEndAsync();
-                    var fileName = Path.GetFileName(filePath);
-
-                    contextBlocks.Add(ContentBlock.FromString($"Content of file '{fileName}':", _ephemeralCacheControl));
-                    contextBlocks.Add(ContentBlock.FromString(fileContent, _ephemeralCacheControl));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error reading context file: {FilePath}", filePath);
-                }
-            }
-
-            // Only set the CacheControl for the last element if the list is not empty
-            if (contextBlocks.Count > 0)
-            {
-                contextBlocks.Last().CacheControl = _ephemeralCacheControl;
-            }
-
-            return contextBlocks;
-        }
         private static Message CreateToolResultMessage(ToolResult toolResult)
         {
             var message = new Message
@@ -431,7 +376,7 @@ namespace ClaudeApi
                 throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
             }
 
-            if (!File.Exists(filePath))
+            if (!_sandboxFileManager.FileExists(filePath))
             {
 
                 throw new FileNotFoundException($"The file '{filePath}' does not exist.");

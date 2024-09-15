@@ -12,8 +12,8 @@ namespace Sanctuary
 
         public SandboxFileManager(IConfiguration configuration)
         {
-            _rootDirectory = configuration["Sanctuary:SandBoxFileRoot"]
-                ?? throw new InvalidOperationException("Missing Sanctuary:SandBoxFileRoot");
+            _rootDirectory = configuration["Sanctuary:SandBoxBasePath"]
+                ?? throw new InvalidOperationException("Missing Sanctuary:SandBoxBasePath");
 
             if (!Directory.Exists(_rootDirectory))
             {

@@ -46,6 +46,9 @@ class Program
         services.AddSingleton<IConfiguration>(configuration);
 
         // Register dependencies
+        services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
+        services.AddSingleton<IUserInterface, ConsoleUserInterface>();
+        services.AddSingleton<OrchestrationAgent>();
         services.AddSingleton<Client>(serviceProvider => new Client(
             serviceProvider.GetRequiredService<ISandboxFileManager>(),
             serviceProvider.GetRequiredService<IConfiguration>(),
@@ -53,15 +56,10 @@ class Program
             typeof(TestTools).Assembly,
             serviceProvider
         ));
-        services.AddSingleton<IUserInterface, ConsoleUserInterface>();
-        services.AddSingleton<OrchestrationAgent>();
 
         // Register NThropic agents
         var client = services.BuildServiceProvider().GetRequiredService<Client>();
         services.AddNThropicAgents(client);
-
-        // Register ISandboxFileManager
-        services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
 
         // Optionally, configure other services here
     }
