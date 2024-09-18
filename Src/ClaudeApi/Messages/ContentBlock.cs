@@ -16,12 +16,12 @@ namespace ClaudeApi.Messages
         public abstract string? Type { get; }
 
         [JsonProperty("cache_control", NullValueHandling = NullValueHandling.Ignore)]
-        public string? CacheControl { get; set; }
+        public JObject? CacheControl { get; set; }
 
         public abstract JToken? GetContent();
 
         // Helper method to create a ContentBlock from a string
-        public static ContentBlock FromString(string content, string? cacheControl = null)
+        public static ContentBlock FromString(string content, JObject? cacheControl = null)
         {
             return new TextContentBlock()
             {

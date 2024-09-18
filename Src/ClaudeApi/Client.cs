@@ -24,13 +24,13 @@ namespace ClaudeApi
 {
     public partial class Client
     {
-        private readonly string _ephemeralCacheControl = "{\"type\": \"ephemeral\"}";
+        private readonly JObject _ephemeralCacheControl = JObject.Parse("{\"type\": \"ephemeral\"}");
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
         private readonly ILogger<Client> _logger;
         private readonly ToolDiscoveryService _toolDiscoveryService;
         private readonly ToolExecutionService _toolExecutionService;
-        private readonly List<Tool> _discoveredTools;
+        private readonly IToolRegistry _toolRegistry;
         private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _contextFiles = [];
         private readonly string _promptsFolder;
@@ -38,7 +38,7 @@ namespace ClaudeApi
 
         public List<ContentBlock> DefaultSystemMessage { get; set; } = [ContentBlock.FromString("a helpful assistant")];
 
-        public Client(ISandboxFileManager sandboxFileManager, IConfiguration configuration, ILogger<Client> logger, Assembly toolAssembly, IServiceProvider serviceProvider)
+        public Client(ISandboxFileManager sandboxFileManager, IToolRegistry toolRegistry, IConfiguration configuration, ILogger<Client> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _apiKey = configuration["ClaudeApiKey"] ?? throw new InvalidOperationException("API key is not configured.");
@@ -49,14 +49,41 @@ namespace ClaudeApi
 
             _serviceProvider = serviceProvider;
             _toolDiscoveryService = new ToolDiscoveryService(_serviceProvider);
-            _discoveredTools = _toolDiscoveryService.DiscoverTools(toolAssembly);
-            _toolExecutionService = new ToolExecutionService(_discoveredTools, serviceProvider);
+            _toolRegistry = toolRegistry;
+            _toolExecutionService = new ToolExecutionService(_toolRegistry);
 
             _sandboxFileManager = sandboxFileManager;
 
-            _logger.LogInformation("Client initialized with {ToolCount} discovered tools", _discoveredTools.Count);
+            _logger.LogInformation("Client initialized.");
         }
 
+        public void DiscoverTools(Assembly toolAssembly)
+        {
+            var _discoveredTools = _toolDiscoveryService.DiscoverTools(toolAssembly);
+            _toolRegistry.AddTools(_discoveredTools);
+            _logger.LogInformation("Discovered {ToolCount} tools", _discoveredTools.Count);
+        }
+
+        public void DiscoverTools(Type type)
+        {
+            var tools = _toolDiscoveryService.DiscoverTools(type);
+            _toolRegistry.AddTools(tools);
+            _logger.LogInformation("Discovered {ToolCount} tools from type {TypeName}", tools.Count, type.Name);
+        }
+
+        public void DiscoverTool(Type type, string methodName)
+        {
+            var tool = _toolDiscoveryService.DiscoverTool(type, methodName);
+            if (tool != null)
+            {
+                _toolRegistry.AddTool(tool);
+                _logger.LogInformation("Discovered tool {ToolName} from type {TypeName}", tool.Name, type.Name);
+            }
+            else
+            {
+                _logger.LogWarning("No tool found with method name {MethodName} in type {TypeName}", methodName, type.Name);
+            }
+        }
         public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
          List<Message> initialMessages,
          List<ContentBlock>? systemMessage = null,
@@ -170,11 +197,11 @@ namespace ClaudeApi
                             Role = "assistant",
                             Content = [
                                 new ToolUseContentBlock
-                                {
-                                    Id = toolUse.Id,
-                                    Name = toolUse.ToolName,
-                                    Input = toolUse.Input
-                                }
+                                    {
+                                        Id = toolUse.Id,
+                                        Name = toolUse.ToolName,
+                                        Input = toolUse.Input
+                                    }
                             ]
                         };
                         messages.Add(message);
@@ -237,13 +264,17 @@ namespace ClaudeApi
             int maxTokens,
             double temperature)
         {
-            var use_tools = _discoveredTools.Select(t => new MessagesRequest.ToolInfo
+            var use_tools = _toolRegistry.Tools.Select(t => new MessagesRequest.ToolInfo
             {
                 Name = t.Name,
                 Description = t.Description,
                 InputSchema = t.InputSchema ?? throw new InvalidOperationException($"{nameof(t.InputSchema)} cannot be null.")
-            });
-            use_tools.Last().CacheControl = _ephemeralCacheControl;
+            }).ToList();
+
+            if (use_tools.Any())
+            {
+                use_tools.Last().CacheControl = _ephemeralCacheControl;
+            }
 
             var request = new MessagesRequest
             {
@@ -253,7 +284,7 @@ namespace ClaudeApi
                 MaxTokens = maxTokens,
                 Temperature = temperature,
                 Stream = true,
-                Tools = use_tools.ToList()
+                Tools = use_tools
             };
 
             _httpClient.DefaultRequestHeaders.Remove("anthropic-version");
@@ -360,10 +391,10 @@ namespace ClaudeApi
                 Role = "user",
                 Content = [
                     new ToolResultContentBlock
-                    {
-                        ToolUseId = toolResult.Id,
-                        Content = toolResult.Result,
-                    }
+                        {
+                            ToolUseId = toolResult.Id,
+                            Content = toolResult.Result,
+                        }
                 ]
             };
             return message;

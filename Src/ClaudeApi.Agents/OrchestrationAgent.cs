@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ClaudeApi.Agents.Tools;
 
 namespace ClaudeApi.Agents
 {
@@ -14,6 +15,7 @@ namespace ClaudeApi.Agents
 
         public async Task StartConversationAsync()
         {
+            client.DiscoverTools(typeof(TestTools).Assembly);
             while (true)
             {
                 // Prompt user for input

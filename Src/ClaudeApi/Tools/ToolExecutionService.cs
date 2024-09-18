@@ -12,90 +12,13 @@ namespace ClaudeApi.Tools
 {
     public class ToolExecutionService
     {
-#pragma warning disable IDE0290 // Use primary constructor
-        private readonly Dictionary<string, Tool> _tools;
-        private readonly Dictionary<string, object> _toolInstances = [];
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IToolRegistry _toolRegistry;
 
-        // ToolExecutionService.cs
-        public ToolExecutionService(List<Tool> tools, IServiceProvider serviceProvider)
+        public ToolExecutionService(IToolRegistry tools)
         {
-            _tools = ValidateAndRegisterTools(tools);
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _toolRegistry = tools ?? throw new ArgumentNullException(nameof(tools));
         }
 
-        private static Dictionary<string, Tool> ValidateAndRegisterTools(List<Tool> tools)
-        {
-            var toolDictionary = new Dictionary<string, Tool>();
-            foreach (var tool in tools)
-            {
-                if (string.IsNullOrWhiteSpace(tool.Name))
-                {
-                    throw new ArgumentException("Tool name cannot be null or empty.");
-                }
-
-                if (tool.Method == null)
-                {
-                    throw new ArgumentException($"Method for tool '{tool.Name}' cannot be null.");
-                }
-
-                if (toolDictionary.ContainsKey(tool.Name))
-                {
-                    throw new ArgumentException($"Duplicate tool name '{tool.Name}' found.");
-                }
-
-                ValidateToolSchema(tool);
-
-                toolDictionary[tool.Name] = tool;
-            }
-            return toolDictionary;
-        }
-
-        private static void ValidateToolSchema(Tool tool)
-        {
-            if (tool.InputSchema == null)
-            {
-                throw new ArgumentException($"Input schema for tool '{tool.Name}' cannot be null.");
-            }
-
-            if (tool.Method == null)
-            {
-                throw new ArgumentException($"Method for tool '{tool.Name}' cannot be null.");
-            }
-
-            var parameters = tool.Method.GetParameters();
-            foreach (var param in parameters)
-            {
-                if (param.Name == null)
-                {
-                    throw new ArgumentException($"Parameter name is null in tool '{tool.Name}'.");
-                }
-
-                if (!tool.InputSchema.Properties.TryGetValue(param.Name, out var schemaProperty))
-                {
-                    throw new ArgumentException($"Input schema for tool '{tool.Name}' is missing property '{param.Name}'.");
-                }
-
-                if (!IsSchemaTypeCompatible(schemaProperty, param.ParameterType))
-                {
-                    throw new ArgumentException($"Schema type '{schemaProperty.Type}' is not compatible with parameter type '{param.ParameterType.Name}' for parameter '{param.Name}' in tool '{tool.Name}'.");
-                }
-            }
-        }
-
-        private static bool IsSchemaTypeCompatible(JsonSchemaProperty schemaProperty, Type parameterType)
-        {
-            return schemaProperty.Type switch
-            {
-                JsonObjectType.String => parameterType == typeof(string),
-                JsonObjectType.Number => parameterType == typeof(double) || parameterType == typeof(float),
-                JsonObjectType.Integer => parameterType == typeof(int) || parameterType == typeof(long),
-                JsonObjectType.Boolean => parameterType == typeof(bool),
-                JsonObjectType.Object => parameterType.IsClass,
-                JsonObjectType.Array => parameterType.IsArray || (parameterType.IsGenericType && parameterType.GetGenericTypeDefinition() == typeof(List<>)),
-                _ => false,
-            };
-        }
 
         public async Task<string> ExecuteToolAsync(string toolName, JObject input, Client client, List<Message> messages)
         {
@@ -109,17 +32,17 @@ namespace ClaudeApi.Tools
                 throw new ArgumentNullException(nameof(input), "Tool input cannot be null.");
             }
 
-            if (!_tools.TryGetValue(toolName, out var tool))
+            if (!_toolRegistry.TryGetTool(toolName, out var tool))
             {
                 throw new ArgumentException($"Tool '{toolName}' not found.");
             }
 
-            if (tool.Method == null)
+            if (tool?.Method == null)
             {
                 throw new ArgumentException($"Method for tool '{toolName}' not found.");
             }
 
-            var toolInstance = GetOrCreateToolInstance(tool);
+            var toolInstance = _toolRegistry.GetOrCreateToolInstance(tool);
 
             var parameters = tool.Method.GetParameters();
             var args = new object[parameters.Length];
@@ -152,7 +75,7 @@ namespace ClaudeApi.Tools
                     args[i] = ConvertValue(value, param.ParameterType, param.Name, toolName) ??
                         (ParameterDefaultValueHelper.TryGetDefaultValue(param, out var defaultValue)
                             ? defaultValue!
-                            : throw new ArgumentException($"Null value not allowed for non-optional parameter '{param.Name}' in tool '{toolName}'."));
+                            : throw new ArgumentException($"Null value not allowed for non-optional parameter '{param.Name}' in tool '{toolName}'.")); ;
                 }
                 catch (Exception ex)
                 {
@@ -185,26 +108,6 @@ namespace ClaudeApi.Tools
             {
                 throw new InvalidOperationException($"Unexpected error executing tool '{toolName}': {ex.Message}", ex);
             }
-        }
-
-        private object GetOrCreateToolInstance(Tool tool)
-        {
-            if (tool.Name == null)
-            {
-                throw new ArgumentNullException(nameof(tool), "Tool name cannot be null.");
-            }
-
-            if (tool.Method?.DeclaringType == null)
-            {
-                throw new InvalidOperationException("DeclaringType of the tool's method cannot be null.");
-            }
-
-            if (!_toolInstances.TryGetValue(tool.Name, out var instance))
-            {
-                instance = _serviceProvider.GetRequiredService(tool.Method.DeclaringType);
-                _toolInstances[tool.Name] = instance;
-            }
-            return instance;
         }
 
         private static object? ConvertValue(JToken value, Type targetType, string paramName, string toolName)

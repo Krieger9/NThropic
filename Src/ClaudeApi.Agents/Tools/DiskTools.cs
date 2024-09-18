@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using ClaudeApi.Tools;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 
 namespace ClaudeApi.Agents.Tools
 {
@@ -38,14 +39,16 @@ namespace ClaudeApi.Agents.Tools
             return fullPath;
         }
 
-        [Tool("read_file", "Reads the content of a file from the sandbox")]
+        [Tool("read_file")]
+        [Description("Reads the content of a file from the sandbox")]
         public async Task<string> ReadFileAsync(string relativePath)
         {
             var safePath = GetSafePath(relativePath);
             return await File.ReadAllTextAsync(safePath, Encoding.UTF8);
         }
 
-        [Tool("write_file", "Writes content to a file in the sandbox, creating directories if needed")]
+        [Tool("write_file")]
+        [Description("Writes content to a file in the sandbox, creating directories if needed")]
         public async Task WriteFileAsync(string relativePath, string content)
         {
             var safePath = GetSafePath(relativePath);
@@ -55,7 +58,8 @@ namespace ClaudeApi.Agents.Tools
             await File.WriteAllTextAsync(safePath, content, Encoding.UTF8);
         }
 
-        [Tool("append_to_file", "Appends content to an existing file in the sandbox, creating directories if needed")]
+        [Tool("append_to_file")]
+        [Description("Appends content to an existing file in the sandbox, creating directories if needed")]
         public async Task AppendToFileAsync(string relativePath, string content)
         {
             var safePath = GetSafePath(relativePath);
@@ -65,14 +69,16 @@ namespace ClaudeApi.Agents.Tools
             await File.AppendAllTextAsync(safePath, content, Encoding.UTF8);
         }
 
-        [Tool("file_exists", "Checks if a file exists in the sandbox")]
+        [Tool("file_exists")]
+        [Description("Checks if a file exists in the sandbox")]
         public bool FileExists(string relativePath)
         {
             var safePath = GetSafePath(relativePath);
             return File.Exists(safePath);
         }
 
-        [Tool("create_directory", "Creates a new directory in the sandbox")]
+        [Tool("create_directory")]
+        [Description("Creates a new directory in the sandbox")]
         public async Task CreateDirectoryAsync(string relativePath)
         {
             var safePath = GetSafePath(relativePath);

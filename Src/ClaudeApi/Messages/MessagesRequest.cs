@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Diagnostics;
 
 namespace ClaudeApi.Messages
@@ -38,7 +39,7 @@ namespace ClaudeApi.Messages
             public object? InputSchema { get; set; }
 
             [JsonProperty("cache_control", NullValueHandling = NullValueHandling.Ignore)]
-            public string? CacheControl { get; set; }
+            public JObject? CacheControl { get; set; }
         }
 
         public class FileContent

@@ -6,12 +6,10 @@ namespace ClaudeApi.Tools
     public class ToolAttribute : Attribute
     {
         public string Name { get; }
-        public string Description { get; }
 
-        public ToolAttribute(string name, string description)
+        public ToolAttribute(string name)
         {
             Name = name;
-            Description = description;
         }
     }
 }

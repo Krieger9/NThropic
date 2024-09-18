@@ -4,6 +4,7 @@ using ClaudeApi.Agents;
 using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.Agents.Tools;
 using ClaudeApi.Agents.User;
+using ClaudeApi.Tools;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -49,11 +50,13 @@ class Program
         services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
         services.AddSingleton<IUserInterface, ConsoleUserInterface>();
         services.AddSingleton<OrchestrationAgent>();
+        services.AddSingleton<IToolRegistry, ToolRegistry>();
+
         services.AddSingleton<Client>(serviceProvider => new Client(
             serviceProvider.GetRequiredService<ISandboxFileManager>(),
+            serviceProvider.GetRequiredService<IToolRegistry>(),
             serviceProvider.GetRequiredService<IConfiguration>(),
             serviceProvider.GetRequiredService<ILogger<Client>>(),
-            typeof(TestTools).Assembly,
             serviceProvider
         ));
 
