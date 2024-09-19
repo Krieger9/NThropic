@@ -61,6 +61,11 @@ namespace ClaudeApi.Messages
                 ["type"] = contentBlock.Type
             };
 
+            if(contentBlock.CacheControl != null)
+            {
+                jo["cache_control"] = contentBlock.CacheControl;
+            }
+
             // Check if contentBlock.Content is not null
             if (contentBlock.GetType().IsGenericType && contentBlock.GetType().GetGenericTypeDefinition() == typeof(ContentBlock<>))
             {

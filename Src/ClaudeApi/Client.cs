@@ -1,24 +1,17 @@
-﻿using ClaudeApi.Tools;
-using ClaudeApi.Messages;
+﻿using ClaudeApi.Messages;
+using ClaudeApi.Prompts;
+using ClaudeApi.Tools;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Concurrent;
-using NJsonSchema.Generation;
-using System.IO;
-using System.Threading.Channels;
-using ClaudeApi.Prompts;
 using Scriban;
-using System.Net.Http;
+using System.Collections.Concurrent;
 using System.IO.Pipelines;
 using System.Reflection;
+using System.Text;
+using System.Threading.Channels;
 
 namespace ClaudeApi
 {
@@ -273,7 +266,17 @@ namespace ClaudeApi
 
             if (use_tools.Any())
             {
-                use_tools.Last().CacheControl = _ephemeralCacheControl;
+                var lastTool = use_tools.Last();
+                if (lastTool.CacheControl == null)
+                {
+                    // Clear CacheControl for all tools
+                    foreach (var tool in use_tools)
+                    {
+                        tool.CacheControl = null;
+                    }
+                    // Set CacheControl for the last tool
+                    lastTool.CacheControl = _ephemeralCacheControl;
+                }
             }
 
             var request = new MessagesRequest
@@ -324,7 +327,7 @@ namespace ClaudeApi
                             await using var fileStream = await _sandboxFileManager.OpenReadAsync(filePath);
                             using var fileReader = new StreamReader(fileStream);
                             string fileContent = await fileReader.ReadToEndAsync();
-                            fileContentBuilder.AppendLine($"### {Path.GetFileName(filePath)} ###");
+                            fileContentBuilder.AppendLine($"### {Path.GetFileName(filePath)} ###\n");
                             fileContentBuilder.AppendLine(fileContent);
 
                             if (i < _contextFiles.Count - 1)
@@ -352,10 +355,6 @@ namespace ClaudeApi
                     for (int i = 0; i < request.Messages.Count; i++)
                     {
                         var message = request.Messages[i];
-                        if (i == request.Messages.Count - 1 && message?.Content?.Count > 0)
-                        {
-                            message.Content.Last().CacheControl = _ephemeralCacheControl;
-                        }
                         serializer.Serialize(jsonWriter, message);
                     }
 
