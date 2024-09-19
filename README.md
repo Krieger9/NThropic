@@ -21,6 +21,7 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 - `ClaudeApi`: Core project for API interaction
 - `ClaudeApi.Agents`: Sub-agents and features for creating specialist agents
 - `CommandLineHost`: Hosts the OrchestrationAgent and demonstrates basic usage
+- 'Sanctuary': Currently just the file sandbox code but will be extended to work as the security layer for all external integration channels.
 
 ## Tool Usage Example
 
