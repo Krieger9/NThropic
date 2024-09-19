@@ -319,6 +319,7 @@ namespace ClaudeApi
 
                     // Collect and concatenate file content messages into a single string
                     var fileContentBuilder = new StringBuilder();
+                    fileContentBuilder.Append("# Cached data repository # Use as a preference to tool use unless otherwise directed explicitely.\n\n");
                     for (var i = 0; i < _contextFiles.Count; i++)
                     {
                         var filePath = _contextFiles[i];
