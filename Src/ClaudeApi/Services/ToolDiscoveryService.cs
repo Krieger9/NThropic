@@ -1,10 +1,11 @@
-﻿using NJsonSchema;
+﻿using ClaudeApi.Tools;
+using NJsonSchema;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace ClaudeApi.Tools
+namespace ClaudeApi.Services
 {
-    public class ToolDiscoveryService
+    public class ToolDiscoveryService : IToolDiscoveryService
     {
         private readonly IServiceProvider _serviceProvider;
 

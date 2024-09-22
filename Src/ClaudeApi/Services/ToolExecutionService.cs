@@ -4,14 +4,17 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using ClaudeApi.Messages;
+using ClaudeApi.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Linq;
 using NJsonSchema;
 
-namespace ClaudeApi.Tools
+namespace ClaudeApi.Services
 {
-    public class ToolExecutionService
+    public class ToolExecutionService : IToolExecutionService
     {
+        public IToolRegistry ToolRegistry => _toolRegistry;
+
         private readonly IToolRegistry _toolRegistry;
 
         public ToolExecutionService(IToolRegistry tools)

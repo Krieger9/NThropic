@@ -1,5 +1,6 @@
 ﻿using ClaudeApi.Messages;
 using ClaudeApi.Prompts;
+using ClaudeApi.Services;
 using ClaudeApi.Tools;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,34 +19,34 @@ namespace ClaudeApi
     public partial class Client
     {
         private readonly JObject _ephemeralCacheControl = JObject.Parse("{\"type\": \"ephemeral\"}");
-        private readonly HttpClient _httpClient;
-        private readonly string _apiKey;
         private readonly ILogger<Client> _logger;
-        private readonly ToolDiscoveryService _toolDiscoveryService;
-        private readonly ToolExecutionService _toolExecutionService;
+        private readonly IToolDiscoveryService _toolDiscoveryService;
+        private readonly IToolExecutionService _toolExecutionService;
         private readonly IToolRegistry _toolRegistry;
         private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _contextFiles = [];
         private readonly string _promptsFolder;
         private readonly ISandboxFileManager _sandboxFileManager;
+        private readonly IClaudeApiService _claudeApiService;
 
-        public List<ContentBlock> DefaultSystemMessage { get; set; } = [ContentBlock.FromString("a helpful assistant")];
-
-        public Client(ISandboxFileManager sandboxFileManager, IToolRegistry toolRegistry, IConfiguration configuration, ILogger<Client> logger, IServiceProvider serviceProvider)
+        public Client(ISandboxFileManager sandboxFileManager, 
+            IToolRegistry toolRegistry, 
+            IClaudeApiService claudeApiService, 
+            IConfiguration configuration, 
+            ILogger<Client> logger, 
+            IServiceProvider serviceProvider)
         {
             _logger = logger;
-            _apiKey = configuration["ClaudeApiKey"] ?? throw new InvalidOperationException("API key is not configured.");
             _promptsFolder = configuration["PromptsFolder"] ?? "./Prompts";
 
-            _httpClient = new HttpClient();
-            _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
-
             _serviceProvider = serviceProvider;
-            _toolDiscoveryService = new ToolDiscoveryService(_serviceProvider);
+            _toolDiscoveryService = _serviceProvider.GetRequiredService<IToolDiscoveryService>();
             _toolRegistry = toolRegistry;
-            _toolExecutionService = new ToolExecutionService(_toolRegistry);
+            _toolExecutionService = _serviceProvider.GetRequiredService<IToolExecutionService>();
+            _toolRegistry = _toolExecutionService.ToolRegistry;
 
             _sandboxFileManager = sandboxFileManager;
+            _claudeApiService = claudeApiService;
 
             _logger.LogInformation("Client initialized.");
         }
@@ -179,7 +180,7 @@ namespace ClaudeApi
             {
                 while (true)
                 {
-                    var apiCall = CreateMessageStreamAsyncInternal(messages, systemMessage ?? DefaultSystemMessage, model, maxTokens, temperature);
+                    var apiCall = CreateMessageStreamAsyncInternal(messages, systemMessage, model, maxTokens, temperature);
                     var toolCompletionQueue = new BlockingCollection<ToolResult>();
                     var sseProcessor = new SseProcessor(_serviceProvider.GetRequiredService<ILogger<SseProcessor>>());
 
@@ -252,7 +253,7 @@ namespace ClaudeApi
 
         private async Task<HttpResponseMessage> CreateMessageStreamAsyncInternal(
             List<Message> messages,
-            List<ContentBlock> systemMessage,
+            List<ContentBlock>? systemMessage,
             string model,
             int maxTokens,
             double temperature)
@@ -264,7 +265,7 @@ namespace ClaudeApi
                 InputSchema = t.InputSchema ?? throw new InvalidOperationException($"{nameof(t.InputSchema)} cannot be null.")
             }).ToList();
 
-            if (use_tools.Any())
+            if (use_tools.Count > 0)
             {
                 var lastTool = use_tools.Last();
                 if (lastTool.CacheControl == null)
@@ -290,98 +291,7 @@ namespace ClaudeApi
                 Tools = use_tools
             };
 
-            _httpClient.DefaultRequestHeaders.Remove("anthropic-version");
-            _httpClient.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-            _httpClient.DefaultRequestHeaders.Remove("anthropic-beta");
-            _httpClient.DefaultRequestHeaders.Add("anthropic-beta", "prompt-caching-2024-07-31");
-
-            _logger.LogInformation("Sending streaming request to Claude API. Model: {Model}, MaxTokens: {MaxTokens}, Temperature: {Temperature}", model, maxTokens, temperature);
-
-            var pipe = new Pipe();
-
-            // Use StreamContent and provide the pipe reader stream.
-            var content = new StreamContent(pipe.Reader.AsStream());
-
-            // Start writing data to the pipe.
-            _ = Task.Run(async () =>
-            {
-                await using (var writer = new StreamWriter(pipe.Writer.AsStream(), new UTF8Encoding(false)))
-                await using (var jsonWriter = new JsonTextWriter(writer))
-                {
-                    var serializer = new JsonSerializer();
-                    jsonWriter.WriteStartObject();
-
-                    // Write the request properties
-                    jsonWriter.WritePropertyName("model");
-                    jsonWriter.WriteValue(request.Model);
-
-                    jsonWriter.WritePropertyName("system");
-
-                    // Collect and concatenate file content messages into a single string
-                    var fileContentBuilder = new StringBuilder();
-                    fileContentBuilder.Append("# Cached data repository # Use as a preference to tool use unless otherwise directed explicitely.\n\n");
-                    for (var i = 0; i < _contextFiles.Count; i++)
-                    {
-                        var filePath = _contextFiles[i];
-                        if (_sandboxFileManager.FileExists(filePath))
-                        {
-                            await using var fileStream = await _sandboxFileManager.OpenReadAsync(filePath);
-                            using var fileReader = new StreamReader(fileStream);
-                            string fileContent = await fileReader.ReadToEndAsync();
-                            fileContentBuilder.AppendLine($"### {Path.GetFileName(filePath)} ###\n");
-                            fileContentBuilder.AppendLine(fileContent);
-
-                            if (i < _contextFiles.Count - 1)
-                            {
-                                fileContentBuilder.AppendLine();
-                            }
-                        }
-                    }
-
-                    // Make a copy of systemMessage for temporary use
-                    var tempSystemMessage = new List<ContentBlock>(request.SystemMessage);
-
-                    // Add the concatenated content to the system message if there is any content
-                    if (fileContentBuilder.Length > 0)
-                    {
-                        tempSystemMessage.Add(ContentBlock.FromString(fileContentBuilder.ToString(), _ephemeralCacheControl));
-                    }
-
-                    serializer.Serialize(jsonWriter, tempSystemMessage);
-
-                    jsonWriter.WritePropertyName("messages");
-                    jsonWriter.WriteStartArray();
-
-                    // Write the existing messages
-                    for (int i = 0; i < request.Messages.Count; i++)
-                    {
-                        var message = request.Messages[i];
-                        serializer.Serialize(jsonWriter, message);
-                    }
-
-                    jsonWriter.WriteEndArray();
-
-                    // Write the remaining request properties
-                    jsonWriter.WritePropertyName("max_tokens");
-                    jsonWriter.WriteValue(request.MaxTokens);
-
-                    jsonWriter.WritePropertyName("temperature");
-                    jsonWriter.WriteValue(request.Temperature);
-
-                    jsonWriter.WritePropertyName("stream");
-                    jsonWriter.WriteValue(request.Stream);
-
-                    jsonWriter.WritePropertyName("tools");
-                    serializer.Serialize(jsonWriter, request.Tools);
-
-                    jsonWriter.WriteEndObject();
-                }
-
-                // Complete the pipe so the reader knows no more data is coming.
-                pipe.Writer.Complete();
-            });
-
-            return await _httpClient.PostAsync("https://api.anthropic.com/v1/messages", content);
+            return await _claudeApiService.SendMessageAsync(request, messages, systemMessage, _contextFiles);
         }
 
         private static Message CreateToolResultMessage(ToolResult toolResult)

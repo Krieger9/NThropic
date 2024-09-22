@@ -4,6 +4,8 @@ using ClaudeApi.Agents;
 using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.Agents.Tools;
 using ClaudeApi.Agents.User;
+using ClaudeApi.DependencyInjection;
+using ClaudeApi.Services;
 using ClaudeApi.Tools;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,16 +47,19 @@ class Program
 
         // Register configuration
         services.AddSingleton<IConfiguration>(configuration);
+        services.AddHttpClient<IClaudeApiService, ClaudeApiService>();
 
         // Register dependencies
         services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
         services.AddSingleton<IUserInterface, ConsoleUserInterface>();
         services.AddSingleton<OrchestrationAgent>();
         services.AddSingleton<IToolRegistry, ToolRegistry>();
+        services.AddClaudApi();
 
         services.AddSingleton<Client>(serviceProvider => new Client(
             serviceProvider.GetRequiredService<ISandboxFileManager>(),
             serviceProvider.GetRequiredService<IToolRegistry>(),
+            serviceProvider.GetRequiredService<IClaudeApiService>(),
             serviceProvider.GetRequiredService<IConfiguration>(),
             serviceProvider.GetRequiredService<ILogger<Client>>(),
             serviceProvider
@@ -63,7 +68,6 @@ class Program
         // Register NThropic agents
         var client = services.BuildServiceProvider().GetRequiredService<Client>();
         services.AddNThropicAgents(client);
-
         // Optionally, configure other services here
     }
 }
