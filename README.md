@@ -8,12 +8,12 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 - Tool use through `ToolAttribute`
 - Orchestration agent for managing conversations
 - Sandbox environment for file operations
+- [Scriban](https://github.com/scriban/scriban) templates for prompts
+- Claude's Prompt Caching
+- Caching system for System, and Tools.
 
 ## Upcoming Features
-
-- Scriban templates for prompts
-- Claude's Prompt Caching
-- Caching system for System, Tools, and two sets of 'Messages'
+- Cache two sets of 'Messages'
 - Sub-agents for specialized tasks
 
 ## Project Structure
@@ -21,6 +21,7 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 - `ClaudeApi`: Core project for API interaction
 - `ClaudeApi.Agents`: Sub-agents and features for creating specialist agents
 - `CommandLineHost`: Hosts the OrchestrationAgent and demonstrates basic usage
+- `Sanctuary`: Currently just the file sandbox code but will be extended to work as the security layer for all external integration channels.
 
 ## Tool Usage Example
 
