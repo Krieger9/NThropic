@@ -107,6 +107,11 @@ namespace ClaudeApi.Services
                     for (int i = 0; i < messages.Count; i++)
                     {
                         var message = messages[i];
+                        message?.Content?.ForEach(contentBlock =>
+                        {
+                            contentBlock.CacheControl = null;
+                        });
+
                         if (i == messages.Count - 1 && message?.Content?.Count > 0)
                         {
                             message.Content.Last().CacheControl = _ephemeralCacheControl;
