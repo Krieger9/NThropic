@@ -20,64 +20,48 @@ namespace ClaudeApi
     {
         private readonly JObject _ephemeralCacheControl = JObject.Parse("{\"type\": \"ephemeral\"}");
         private readonly ILogger<Client> _logger;
-        private readonly IToolDiscoveryService _toolDiscoveryService;
-        private readonly IToolExecutionService _toolExecutionService;
-        private readonly IToolRegistry _toolRegistry;
+        private readonly IToolManagementService _toolManagementService;
         private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _contextFiles = [];
-        private readonly string _promptsFolder;
         private readonly ISandboxFileManager _sandboxFileManager;
         private readonly IClaudeApiService _claudeApiService;
+        private readonly IPromptService _promptService;
 
         public Client(ISandboxFileManager sandboxFileManager, 
-            IToolRegistry toolRegistry, 
+            IToolManagementService toolManagementService, 
             IClaudeApiService claudeApiService, 
-            IConfiguration configuration, 
             ILogger<Client> logger, 
+            IPromptService promptService,
             IServiceProvider serviceProvider)
         {
             _logger = logger;
-            _promptsFolder = configuration["PromptsFolder"] ?? "./Prompts";
-
             _serviceProvider = serviceProvider;
-            _toolDiscoveryService = _serviceProvider.GetRequiredService<IToolDiscoveryService>();
-            _toolRegistry = toolRegistry;
-            _toolExecutionService = _serviceProvider.GetRequiredService<IToolExecutionService>();
-            _toolRegistry = _toolExecutionService.ToolRegistry;
-
+            _toolManagementService = toolManagementService;
             _sandboxFileManager = sandboxFileManager;
             _claudeApiService = claudeApiService;
+            _promptService = promptService;
 
             _logger.LogInformation("Client initialized.");
         }
 
         public void DiscoverTools(Assembly toolAssembly)
         {
-            var _discoveredTools = _toolDiscoveryService.DiscoverTools(toolAssembly);
-            _toolRegistry.AddTools(_discoveredTools);
-            _logger.LogInformation("Discovered {ToolCount} tools", _discoveredTools.Count);
+            _toolManagementService.DiscoverTools(toolAssembly);
+            _logger.LogInformation("Discovered {ToolCount} tools", _toolManagementService.ToolRegistry.Tools.Count());
         }
 
         public void DiscoverTools(Type type)
         {
-            var tools = _toolDiscoveryService.DiscoverTools(type);
-            _toolRegistry.AddTools(tools);
-            _logger.LogInformation("Discovered {ToolCount} tools from type {TypeName}", tools.Count, type.Name);
+            _toolManagementService.DiscoverTools(type);
+            _logger.LogInformation("Discovered {ToolCount} tools from type {TypeName}", _toolManagementService.ToolRegistry.Tools.Count(), type.Name);
         }
 
         public void DiscoverTool(Type type, string methodName)
         {
-            var tool = _toolDiscoveryService.DiscoverTool(type, methodName);
-            if (tool != null)
-            {
-                _toolRegistry.AddTool(tool);
-                _logger.LogInformation("Discovered tool {ToolName} from type {TypeName}", tool.Name, type.Name);
-            }
-            else
-            {
-                _logger.LogWarning("No tool found with method name {MethodName} in type {TypeName}", methodName, type.Name);
-            }
+            _toolManagementService.DiscoverTool(type, methodName);
+            _logger.LogInformation("Discovered {ToolCount} total tools.", _toolManagementService.ToolRegistry.Tools.Count());
         }
+
         public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
          List<Message> initialMessages,
          List<ContentBlock>? systemMessage = null,
@@ -131,6 +115,7 @@ namespace ClaudeApi
 
             return ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature);
         }
+
         public async Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
             Prompt prompt,
             List<Message> history,
@@ -139,33 +124,10 @@ namespace ClaudeApi
             int maxTokens = 1024,
             double temperature = 1.0)
         {
-            var userMessage = await ParsePromptAsync(prompt);
+            var userMessage = await _promptService.ParsePromptAsync(prompt);
             history.Add(userMessage);
 
             return ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature);
-        }
-
-        private async Task<Message> ParsePromptAsync(Prompt prompt)
-        {
-            var filePath = Path.Combine(_promptsFolder, $"{prompt.Name}.scriban");
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException($"The prompt file '{filePath}' does not exist.");
-            }
-
-            var templateContent = await File.ReadAllTextAsync(filePath); var template = Template.Parse(templateContent);
-
-            if (template.HasErrors)
-            {
-                throw new InvalidOperationException($"Errors in template: {string.Join(", ", template.Messages.Select(m => m.Message))}");
-            }
-
-            var renderedContent = template.Render(prompt.Arguments);
-            return new Message
-            {
-                Role = "user",
-                Content = [ContentBlock.FromString(renderedContent)]
-            };
         }
 
         private async Task ProcessConversationInternalAsync(
@@ -241,7 +203,7 @@ namespace ClaudeApi
         {
             try
             {
-                var result = await _toolExecutionService.ExecuteToolAsync(toolUse.ToolName, toolUse.Input, this, messages);
+                var result = await _toolManagementService.ExecuteToolAsync(toolUse.ToolName, toolUse.Input, this, messages);
                 return new ToolResult(toolUse.Id, result);
             }
             catch (Exception ex)
@@ -258,7 +220,7 @@ namespace ClaudeApi
             int maxTokens,
             double temperature)
         {
-            var use_tools = _toolRegistry.Tools.Select(t => new MessagesRequest.ToolInfo
+            var use_tools = _toolManagementService.ToolRegistry.Tools.Select(t => new MessagesRequest.ToolInfo
             {
                 Name = t.Name,
                 Description = t.Description,
@@ -319,7 +281,6 @@ namespace ClaudeApi
 
             if (!_sandboxFileManager.FileExists(filePath))
             {
-
                 throw new FileNotFoundException($"The file '{filePath}' does not exist.");
             }
 
@@ -338,7 +299,5 @@ namespace ClaudeApi
         {
             return _contextFiles.AsReadOnly();
         }
-
-        // Remove or comment out the old CreateMessageStreamAsync and CreateMessageStreamAsyncInternal methods
     }
 }

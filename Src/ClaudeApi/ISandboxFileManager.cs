@@ -16,5 +16,8 @@ namespace ClaudeApi
         bool FileExists(string relativePath);
         bool PathIsSafe(string path);
         string GetFileStructure(string relativeRootDir);
+        public bool IsValidPath(string relativePath);
+        Task CreateDirectoryAsync(string relativePath);
+        IEnumerable<string> GetFileNamesForPath(string relativePath, bool include_subdirectories);
     }
 }

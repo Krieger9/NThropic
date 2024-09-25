@@ -53,15 +53,17 @@ class Program
         services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
         services.AddSingleton<IUserInterface, ConsoleUserInterface>();
         services.AddSingleton<OrchestrationAgent>();
-        services.AddSingleton<IToolRegistry, ToolRegistry>();
+        services.AddTransient<IToolRegistry, ToolRegistry>();
+        services.AddTransient<IPromptService, PromptService>();
+        services.AddTransient<IToolManagementService, ToolManagementService>();
         services.AddClaudApi();
 
         services.AddSingleton<Client>(serviceProvider => new Client(
             serviceProvider.GetRequiredService<ISandboxFileManager>(),
-            serviceProvider.GetRequiredService<IToolRegistry>(),
+            serviceProvider.GetRequiredService<IToolManagementService>(),
             serviceProvider.GetRequiredService<IClaudeApiService>(),
-            serviceProvider.GetRequiredService<IConfiguration>(),
             serviceProvider.GetRequiredService<ILogger<Client>>(),
+            serviceProvider.GetRequiredService<IPromptService>(),
             serviceProvider
         ));
 

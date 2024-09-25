@@ -2,17 +2,19 @@
 using Microsoft.Extensions.Logging;
 using ClaudeApi.Messages;
 using ClaudeApi.Prompts;
+using Microsoft.Extensions.Configuration;
 
 namespace ClaudeApi.Services
 {
-    public class PromptService
+    public class PromptService : IPromptService
     {
         private readonly string _promptsFolder;
         private readonly ILogger<PromptService> _logger;
 
-        public PromptService(string promptsFolder, ILogger<PromptService> logger)
+        public PromptService(IConfiguration configuration, ILogger<PromptService> logger)
         {
-            _promptsFolder = promptsFolder;
+
+            _promptsFolder = configuration["PromptsFolder"] ?? "./Prompts";
             _logger = logger;
         }
 

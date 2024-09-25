@@ -11,78 +11,133 @@ namespace ClaudeApi.Agents.Tools
 {
     public class DiskTools
     {
-        private readonly Lazy<string> _sandboxBasePath;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly ISandboxFileManager _sandboxFileManager;
 
-        public DiskTools(IServiceProvider serviceProvider)
+        public DiskTools(ISandboxFileManager sandboxFileManager)
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _sandboxBasePath = new Lazy<string>(() =>
-            {
-                var configuration = _serviceProvider.GetRequiredService<IConfiguration>();
-                var path = configuration["Sanctuary:SandboxBasePath"];
-                if (string.IsNullOrEmpty(path))
-                    throw new InvalidOperationException("Sanctuary:SandboxBasePath is not set in the configuration.");
-
-                return path;
-            });
-        }
-
-        public string SandboxBasePath => _sandboxBasePath.Value;
-
-        private string GetSafePath(string relativePath)
-        {
-            var fullPath = Path.GetFullPath(Path.Combine(SandboxBasePath, relativePath));
-            if (!fullPath.StartsWith(SandboxBasePath, StringComparison.OrdinalIgnoreCase))
-                throw new SecurityException("Access to path outside of sandbox is not allowed.");
-
-            return fullPath;
+            _sandboxFileManager = sandboxFileManager ?? throw new ArgumentNullException(nameof(sandboxFileManager));
         }
 
         [Tool("read_file")]
         [Description("Reads the content of a file from the sandbox")]
         public async Task<string> ReadFileAsync(string relativePath)
         {
-            var safePath = GetSafePath(relativePath);
-            return await File.ReadAllTextAsync(safePath, Encoding.UTF8);
+            try
+            {
+                using var stream = await _sandboxFileManager.OpenReadAsync(relativePath);
+                using var reader = new StreamReader(stream, Encoding.UTF8);
+                return await reader.ReadToEndAsync();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return $"UnauthorizedAccessException: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Exception: {ex.Message}";
+            }
         }
 
         [Tool("write_file")]
         [Description("Writes content to a file in the sandbox, creating directories if needed")]
-        public async Task WriteFileAsync(string relativePath, string content)
+        public async Task<string> WriteFileAsync(string relativePath, string content)
         {
-            var safePath = GetSafePath(relativePath);
-            var directoryPath = Path.GetDirectoryName(safePath) ?? throw new InvalidOperationException("The directory path could not be determined.");
-
-            Directory.CreateDirectory(directoryPath);
-            await File.WriteAllTextAsync(safePath, content, Encoding.UTF8);
+            try
+            {
+                var dataStream = new MemoryStream(Encoding.UTF8.GetBytes(content));
+                await _sandboxFileManager.WriteAsync(relativePath, dataStream);
+                return "File written successfully.";
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return $"UnauthorizedAccessException: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Exception: {ex.Message}";
+            }
         }
 
         [Tool("append_to_file")]
         [Description("Appends content to an existing file in the sandbox, creating directories if needed")]
-        public async Task AppendToFileAsync(string relativePath, string content)
+        public async Task<string> AppendToFileAsync(string relativePath, string content)
         {
-            var safePath = GetSafePath(relativePath);
-            var directoryPath = Path.GetDirectoryName(safePath) ?? throw new InvalidOperationException("The directory path could not be determined.");
+            try
+            {
+                if (!_sandboxFileManager.FileExists(relativePath))
+                {
+                    return await WriteFileAsync(relativePath, content);
+                }
 
-            Directory.CreateDirectory(directoryPath);
-            await File.AppendAllTextAsync(safePath, content, Encoding.UTF8);
+                using var stream = await _sandboxFileManager.OpenReadAsync(relativePath);
+                using var reader = new StreamReader(stream, Encoding.UTF8);
+                var existingContent = await reader.ReadToEndAsync();
+                var newContent = existingContent + content;
+
+                return await WriteFileAsync(relativePath, newContent);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return $"UnauthorizedAccessException: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Exception: {ex.Message}";
+            }
         }
 
         [Tool("file_exists")]
         [Description("Checks if a file exists in the sandbox")]
-        public bool FileExists(string relativePath)
+        public string FileExists(string relativePath)
         {
-            var safePath = GetSafePath(relativePath);
-            return File.Exists(safePath);
+            try
+            {
+                return _sandboxFileManager.FileExists(relativePath) ? "File exists." : "File does not exist.";
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return $"UnauthorizedAccessException: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Exception: {ex.Message}";
+            }
         }
 
         [Tool("create_directory")]
         [Description("Creates a new directory in the sandbox")]
-        public async Task CreateDirectoryAsync(string relativePath)
+        public async Task<string> CreateDirectoryAsync(string relativePath)
         {
-            var safePath = GetSafePath(relativePath);
-            await Task.Run(() => Directory.CreateDirectory(safePath));
+            try
+            {
+                await _sandboxFileManager.CreateDirectoryAsync(relativePath);
+                return "Directory created successfully.";
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return $"UnauthorizedAccessException: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Exception: {ex.Message}";
+            }
+        }
+
+        [Tool("get_directory_tree")]
+        public async Task<string> GetDirectoryTreeAsync(string relativePath)
+        {
+            try
+            {
+                return await Task.Run(() => _sandboxFileManager.GetFileStructure(relativePath));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return $"UnauthorizedAccessException: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Exception: {ex.Message}";
+            }
         }
     }
 }

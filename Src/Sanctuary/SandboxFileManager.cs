@@ -132,6 +132,19 @@ namespace Sanctuary
             return File.Exists(fullPath);
         }
 
+        public bool IsValidPath(string relativePath)
+        {
+            try
+            {
+                ValidatePath(relativePath);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         // Validates and normalizes the provided path
         private string ValidatePath(string relativePath)
         {
@@ -172,6 +185,35 @@ namespace Sanctuary
             var fileStructure = new StringBuilder();
             GenerateFileStructure(fullPath, fileStructure, 0);
             return fileStructure.ToString();
+        }
+
+        public async Task CreateDirectoryAsync(string relativePath)
+        {
+            var fullPath = ValidatePath(relativePath);
+            try
+            {
+                await Task.Run(() => Directory.CreateDirectory(fullPath));
+            }
+            catch (Exception ex)
+            {
+                // Log exception here
+                throw new IOException($"Failed to create directory: {relativePath}", ex);
+            }
+        }
+
+        public IEnumerable<string> GetFileNamesForPath(string relativePath, bool include_subdirectories)
+        {
+            var fullPath = ValidatePath(relativePath);
+            try
+            {
+                var files = Directory.GetFiles(fullPath, "*", include_subdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+                return files.Select(file => Path.GetRelativePath(_rootDirectory, file));
+            }
+            catch (Exception ex)
+            {
+                // Log exception here
+                throw new IOException($"Failed to get file names under path: {relativePath}", ex);
+            }
         }
 
         private static void GenerateFileStructure(string dir, StringBuilder fileStructure, int level)
