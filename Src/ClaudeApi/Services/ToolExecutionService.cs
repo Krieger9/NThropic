@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ClaudeApi.Messages;
 using ClaudeApi.Tools;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NJsonSchema;
 
@@ -120,27 +121,40 @@ namespace ClaudeApi.Services
                 return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
             }
 
-            if (targetType.IsEnum)
-            {
-                return Enum.Parse(targetType, value.ToString(), ignoreCase: true);
-            }
-
-            if (targetType == typeof(DateTime))
-            {
-                if (DateTime.TryParse(value.ToString(), out var dateTime))
-                {
-                    return dateTime;
-                }
-                throw new ArgumentException($"Invalid date format for parameter '{paramName}' in tool '{toolName}'.");
-            }
+            string stringValue = value.ToString();
 
             try
             {
-                return value.ToObject(targetType);
+                if (targetType == typeof(string))
+                {
+                    return stringValue;
+                }
+
+                if (targetType.IsPrimitive || targetType == typeof(DateTime) || targetType.IsEnum)
+                {
+                    return Convert.ChangeType(stringValue, targetType);
+                }
+
+                if (targetType.IsArray || (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+                {
+                    Type elementType = targetType.IsArray ? targetType.GetElementType()! : targetType.GetGenericArguments()[0];
+                    try
+                    {
+                        return JArray.Parse(stringValue).ToObject(targetType);
+                    }
+                    catch
+                    {
+                        var items = stringValue.Split(',').Select(s => s.Trim());
+                        var convertedItems = items.Select(item => ConvertValue(JToken.FromObject(item), elementType, paramName, toolName));
+                        return targetType.IsArray ? convertedItems.ToArray() : (object)convertedItems.ToList();
+                    }
+                }
+
+                return JsonConvert.DeserializeObject(stringValue, targetType);
             }
             catch (Exception ex)
             {
-                throw new ArgumentException($"Failed to convert value '{value}' to type '{targetType.Name}' for parameter '{paramName}' in tool '{toolName}': {ex.Message}", ex);
+                throw new ArgumentException($"Failed to convert value '{stringValue}' to type '{targetType.Name}' for parameter '{paramName}' in tool '{toolName}': {ex.Message}", ex);
             }
         }
 
