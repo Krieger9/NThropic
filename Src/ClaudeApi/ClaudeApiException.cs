@@ -1,6 +1,6 @@
 ﻿namespace ClaudeApi
 {
-    public partial class Client
+    public partial class ClaudeClient
     {
         public class ClaudeApiException : Exception
         {

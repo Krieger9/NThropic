@@ -1,26 +1,17 @@
 ﻿using ClaudeApi.Agents;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace ClaudeApi.Agents.User
+namespace CommandLineHost
 {
     internal class ConsoleUserInterface : IUserInterface
     {
         private readonly StringBuilder _partialMessageBuilder = new ();
 
-        public void AddArtifact(string artifact)
-        {
-            Console.WriteLine($"Artifact added: {artifact}");
-        }
-
-        public string Prompt(string message)
+        public Task<string> PromptAsync(string message)
         {
             Console.WriteLine(message);
             ClearKeyboardBuffer();
-            return Console.ReadLine() ?? "";
+            return Task.FromResult(Console.ReadLine() ?? "");
         }
 
         public void Message(string message)

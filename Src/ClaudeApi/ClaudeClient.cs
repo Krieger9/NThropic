@@ -16,10 +16,10 @@ using System.Threading.Channels;
 
 namespace ClaudeApi
 {
-    public partial class Client
+    public partial class ClaudeClient
     {
         private readonly JObject _ephemeralCacheControl = JObject.Parse("{\"type\": \"ephemeral\"}");
-        private readonly ILogger<Client> _logger;
+        private readonly ILogger<ClaudeClient> _logger;
         private readonly IToolManagementService _toolManagementService;
         private readonly IServiceProvider _serviceProvider;
         private readonly List<string> _contextFiles = [];
@@ -27,10 +27,10 @@ namespace ClaudeApi
         private readonly IClaudeApiService _claudeApiService;
         private readonly IPromptService _promptService;
 
-        public Client(ISandboxFileManager sandboxFileManager, 
+        public ClaudeClient(ISandboxFileManager sandboxFileManager, 
             IToolManagementService toolManagementService, 
             IClaudeApiService claudeApiService, 
-            ILogger<Client> logger, 
+            ILogger<ClaudeClient> logger, 
             IPromptService promptService,
             IServiceProvider serviceProvider)
         {

@@ -56,7 +56,7 @@ namespace ClaudeApi.Services
             }
         }
 
-        public async Task<string> ExecuteToolAsync(string toolName, JObject input, Client client, List<Message> messages)
+        public async Task<string> ExecuteToolAsync(string toolName, JObject input, ClaudeClient client, List<Message> messages)
         {
             if (string.IsNullOrWhiteSpace(toolName))
             {

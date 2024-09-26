@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace ClaudeApi.Agents.Agents
 {
-    public class SummaryAgent(Client client) : Agent
+    public class SummaryAgent(ClaudeClient client) : Agent
     {
-        private readonly Client _client = client ?? throw new ArgumentNullException(nameof(client));
+        private readonly ClaudeClient _client = client ?? throw new ArgumentNullException(nameof(client));
 
         public override async Task<string> ExecuteAsync(string input, Dictionary<string, object> arguments)
         {

@@ -2,11 +2,10 @@
 using ClaudeApi;
 using ClaudeApi.Agents;
 using ClaudeApi.Agents.DependencyInjection;
-using ClaudeApi.Agents.Tools;
-using ClaudeApi.Agents.User;
 using ClaudeApi.DependencyInjection;
 using ClaudeApi.Services;
 using ClaudeApi.Tools;
+using CommandLineHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -47,29 +46,27 @@ class Program
 
         // Register configuration
         services.AddSingleton<IConfiguration>(configuration);
-        services.AddHttpClient<IClaudeApiService, ClaudeApiService>();
 
         // Register dependencies
+        services.AddHttpClient<IClaudeApiService, ClaudeApiService>();
         services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
         services.AddSingleton<IUserInterface, ConsoleUserInterface>();
         services.AddSingleton<OrchestrationAgent>();
         services.AddTransient<IToolRegistry, ToolRegistry>();
         services.AddTransient<IPromptService, PromptService>();
-        services.AddTransient<IToolManagementService, ToolManagementService>();
         services.AddClaudApi();
 
-        services.AddSingleton<Client>(serviceProvider => new Client(
+        services.AddSingleton<ClaudeClient>(serviceProvider => new ClaudeClient(
             serviceProvider.GetRequiredService<ISandboxFileManager>(),
             serviceProvider.GetRequiredService<IToolManagementService>(),
             serviceProvider.GetRequiredService<IClaudeApiService>(),
-            serviceProvider.GetRequiredService<ILogger<Client>>(),
+            serviceProvider.GetRequiredService<ILogger<ClaudeClient>>(),
             serviceProvider.GetRequiredService<IPromptService>(),
             serviceProvider
         ));
 
         // Register NThropic agents
-        var client = services.BuildServiceProvider().GetRequiredService<Client>();
-        services.AddNThropicAgents(client);
+        services.AddNThropicAgents();
         // Optionally, configure other services here
     }
 }

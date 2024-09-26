@@ -11,9 +11,9 @@ namespace ClaudeApi.Agents.DependencyInjection
 {
     public static class IServiceCollectionExtensions
     {
-        public static IServiceCollection AddNThropicAgents(this IServiceCollection services, Client client)
+        public static IServiceCollection AddNThropicAgents(this IServiceCollection services)
         {
-            services.AddSingleton(new SummaryAgent(client));
+            services.AddSingleton<SummaryAgent>();
             services.AddTransient<TestTools>();
             services.AddTransient<SummarizeTools>();
             services.AddTransient<PromptCacheTools>();

@@ -12,6 +12,13 @@ namespace ClaudeApi.Messages
 
         [JsonProperty("content")]
         public List<ContentBlock>? Content { get; set; } // Change to object to support both string and List<ContentBlock>
+
+        public override string ToString()
+        {
+            if(Content == null) return string.Empty;
+            else
+            return $"{Role}: {string.Join("\n", Content)}";
+        }
     }
 
     public class MessageConverter : JsonConverter

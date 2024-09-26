@@ -8,8 +8,7 @@ namespace ClaudeApi.Agents
 {
     public interface IUserInterface
     {
-        void AddArtifact(string artifact);
-        string Prompt(string message);
+        Task<string> PromptAsync(string message);
         void Message(string message);
         void ReceivePartialMessage(string partialMessage);
         void EndPartialMessage();

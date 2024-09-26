@@ -13,7 +13,7 @@ namespace ClaudeApi.Tools
         public object Value { get; set; } = "";
 
         // Lambda function that takes a Client and List<Message> as parameters
-        public Action<Client, List<Message>> SystemCommand { get; set; } = (client, history) => { };
+        public Action<ClaudeClient, List<Message>> SystemCommand { get; set; } = (client, history) => { };
 
         // Default constructor
         public ToolInvokeResult() { }
@@ -25,13 +25,13 @@ namespace ClaudeApi.Tools
         }
 
         // Constructor to initialize with SystemCommand
-        public ToolInvokeResult(Action<Client, List<Message>> systemCommand)
+        public ToolInvokeResult(Action<ClaudeClient, List<Message>> systemCommand)
         {
             SystemCommand = systemCommand;
         }
 
         // Constructor to initialize with both Value and SystemCommand
-        public ToolInvokeResult(object value, Action<Client, List<Message>> systemCommand)
+        public ToolInvokeResult(object value, Action<ClaudeClient, List<Message>> systemCommand)
         {
             Value = value;
             SystemCommand = systemCommand;

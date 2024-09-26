@@ -13,6 +13,6 @@ namespace ClaudeApi.Services
     {
         IToolRegistry ToolRegistry { get; }
 
-        Task<string> ExecuteToolAsync(string toolName, JObject input, Client client, List<Message> messages);
+        Task<string> ExecuteToolAsync(string toolName, JObject input, ClaudeClient client, List<Message> messages);
     }
 }

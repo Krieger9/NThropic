@@ -9,7 +9,7 @@ using ClaudeApi.Agents.Tools;
 
 namespace ClaudeApi.Agents
 {
-    public partial class OrchestrationAgent(Client client, IUserInterface userInterface)
+    public partial class OrchestrationAgent(ClaudeClient client, IUserInterface userInterface)
     {
         private readonly MessageHistory _messageHistory = new ();
 
@@ -19,7 +19,7 @@ namespace ClaudeApi.Agents
             while (true)
             {
                 // Prompt user for input
-                string userInput = userInterface.Prompt("You: ");
+                string userInput = await userInterface.PromptAsync("You: ");
                 if (string.IsNullOrEmpty(userInput))
                 {
                     break; // Exit loop if user input is empty
