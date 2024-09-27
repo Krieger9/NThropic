@@ -50,7 +50,7 @@ Prompts can be sent as strings or as [Prompt](https://github.com/Krieger9/NThrop
 Prompt parsing takes arguments in a Dictionary.  All parsing is done using the [Scriban library](https://github.com/scriban/scriban).
 Currently the file is expected to be a .scriban file.  Will almost certainly add support for .liquid soon due to the ease.
 
-## Tool Usage Example
+## Tool Usage
 
 Tools can be defined using the `ToolAttribute`:
 ```
@@ -63,16 +63,6 @@ public class TestTools
         }
     }
 ```
-
-## Tool Usage Example
-Shows basic looping structure for and history management.
-[Orchestration Agent](https://github.com/Krieger9/NThropic/blob/main/Src/ClaudeApi.Agents/OrchestrationAgent.cs)
-
-Basic Tool discovery.  This actually loads all tools defined in the same assembly as 'TestTools' type.
-```
-client.DiscoverTools(typeof(TestTools).Assembly);
-```
-
 Currently you can discover tools by...
 - All methods marked with the [Tool] attribute in the given assembly.
 - All methods marked with the [Tool] attribute in the given type.
@@ -81,6 +71,15 @@ Currently you can discover tools by...
         public void DiscoverTools(Assembly toolAssembly)        
         public void DiscoverTools(Type type)
         public void DiscoverTool(Type type, string methodName)
+```
+
+## Tool Usage Example
+Shows basic looping structure for and history management.
+[Orchestration Agent](https://github.com/Krieger9/NThropic/blob/main/Src/ClaudeApi.Agents/OrchestrationAgent.cs)
+
+Basic Tool discovery.  This actually loads all tools defined in the same assembly as 'TestTools' type.
+```
+client.DiscoverTools(typeof(TestTools).Assembly);
 ```
 
 ## Prompt Caching
