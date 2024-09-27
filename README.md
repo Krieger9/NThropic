@@ -17,11 +17,31 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 - Sub-agents for specialized tasks
 
 ## Project Structure
-
 - `ClaudeApi`: Core project for API interaction
 - `ClaudeApi.Agents`: Sub-agents and features for creating specialist agents
 - `CommandLineHost`: Hosts the OrchestrationAgent and demonstrates basic usage
 - `Sanctuary`: Currently just the file sandbox code but will be extended to work as the security layer for all external integration channels.
+
+## Prompts
+Prompts can be sent as strings or as [Prompt](https://github.com/Krieger9/NThropic/blob/main/Src/ClaudeApi/Prompts/Prompt.cs) objects.  Prompt objects will load from file.
+```
+            var prompt = new Prompt("Summarize")
+            {
+                Arguments = new Dictionary<string, object>
+                {
+                    { "input", input }
+                }
+                .Concat(arguments)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            };
+
+            var history = new List<Message>();
+            var systemMessage = new List<ContentBlock>();
+            var responses = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage);
+```
+
+Prompt parsing takes arguments in a Dictionary.  All parsing is done using the [Scriban library](https://github.com/scriban/scriban).
+Currently the file is expected to be a .scriban file.  Will almost certainly add support for .liquid soon due to the ease.
 
 ## Tool Usage Example
 
@@ -35,6 +55,25 @@ public class TestTools
             return $"Echo: {input}";
         }
     }
+```
+
+## Tool Usage Example
+Shows basic looping structure for and history management.
+[Orchestration Agent](https://github.com/Krieger9/NThropic/blob/main/Src/ClaudeApi.Agents/OrchestrationAgent.cs)
+
+Basic Tool discovery.  This actually loads all tools defined in the same assembly as 'TestTools' type.
+```
+client.DiscoverTools(typeof(TestTools).Assembly);
+```
+
+Currently you can discover tools by...
+- All methods marked with the [Tool] attribute in the given assembly.
+- All methods marked with the [Tool] attribute in the given type.
+- The specific method with the [Tool] attribute in the given type with the specified name.
+```
+        public void DiscoverTools(Assembly toolAssembly)        
+        public void DiscoverTools(Type type)
+        public void DiscoverTool(Type type, string methodName)
 ```
 
 
