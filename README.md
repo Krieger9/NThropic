@@ -22,6 +22,11 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 - `CommandLineHost`: Hosts the OrchestrationAgent and demonstrates basic usage
 - `Sanctuary`: Currently just the file sandbox code but will be extended to work as the security layer for all external integration channels.
 
+## Simple Chat Agent
+CommandLine host will use the Orchestration Agent to perform a simple Chat Agent.  Unfortunately the logging is currently using the same console output.
+WinUI3 client coming very soon.  Will likely attempt to split out that difference at some point.
+[Orchestration Agent](https://github.com/Krieger9/NThropic/blob/main/Src/ClaudeApi.Agents/OrchestrationAgent.cs)
+
 ## Prompts
 Prompts can be sent as strings or as [Prompt](https://github.com/Krieger9/NThropic/blob/main/Src/ClaudeApi/Prompts/Prompt.cs) objects.  Prompt objects will load from file.
 ```
