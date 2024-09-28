@@ -1,14 +1,9 @@
 ﻿using ClaudeApi.Messages;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ClaudeApi
+namespace ClaudeApi.Agents
 {
-    public class MessageHistory
+    public class MessageHistory : IMessageHistory
     {
         [JsonProperty("messages")]
         public List<Message> Messages { get; set; } = new List<Message>();

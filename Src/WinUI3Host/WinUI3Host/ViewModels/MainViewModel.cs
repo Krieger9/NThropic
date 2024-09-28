@@ -69,9 +69,6 @@ namespace WinUI3Host.ViewModels
             // Wait for the user to click the send button
             string userInput = await _promptCompletionSource.Task;
 
-            // Display the prompt message (you can customize this as needed)
-            Messages.Add(new Message { Role = "system", Content = [ContentBlock.FromString(userInput)] });
-
             // Return the user input
             return userInput;
         }

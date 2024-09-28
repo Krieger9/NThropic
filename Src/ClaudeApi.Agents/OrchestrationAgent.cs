@@ -9,55 +9,69 @@ using ClaudeApi.Agents.Tools;
 
 namespace ClaudeApi.Agents
 {
-    public partial class OrchestrationAgent(ClaudeClient client, IUserInterface userInterface)
+    public partial class OrchestrationAgent
     {
-        private readonly MessageHistory _messageHistory = new ();
+        private readonly IMessageHistory _messageHistory;
+        private readonly IUserInterface _userInterface;
+        private readonly ClaudeClient _client;
+
+        public OrchestrationAgent(ClaudeClient client, IUserInterface userInterface, IMessageHistory messageHistory)
+        {
+            _messageHistory = messageHistory;
+            _userInterface = userInterface;
+            _client = client;
+        }
+
+        public IMessageHistory MessageHistory => _messageHistory;
+
+        public event Action<Message>? MessageAdded;
+
+        private void OnMessageAdded(Message message)
+        {
+            MessageAdded?.Invoke(message);
+        }
 
         public async Task StartConversationAsync()
         {
-            client.DiscoverTools(typeof(TestTools).Assembly);
+            _client.DiscoverTools(typeof(TestTools).Assembly);
             while (true)
             {
-                // Prompt user for input
-                string userInput = await userInterface.PromptAsync("You: ");
+                string userInput = await _userInterface.PromptAsync("You: ");
                 if (string.IsNullOrEmpty(userInput))
                 {
-                    break; // Exit loop if user input is empty
+                    break;
                 }
 
-                // Add user message to history
                 var userMessage = new Message
                 {
                     Role = "user",
-                    Content = [ContentBlock.FromString(userInput)]
+                    Content = new List<ContentBlock> { ContentBlock.FromString(userInput) }
                 };
 
                 _messageHistory.AddMessage(userMessage);
+                OnMessageAdded(userMessage);
 
-                // Accumulate streaming content
                 var assistantMessageBuilder = new StringBuilder();
-
-                // Send messages to LLM and get streaming response
-                var streamContentTask = client.ProcessContinuousConversationAsync(
-                    _messageHistory.Messages, 
-                    systemMessage: [ContentBlock.FromString(SystemPrompt)]);
+                var streamContentTask = _client.ProcessContinuousConversationAsync(
+                    _messageHistory.Messages,
+                    systemMessage: new List<ContentBlock> { ContentBlock.FromString(SystemPrompt) });
 
                 await foreach (var streamContent in streamContentTask)
                 {
-                    // Display streaming content
-                    userInterface.ReceivePartialMessage(streamContent);
+                    _userInterface.ReceivePartialMessage(streamContent);
                     assistantMessageBuilder.Append(streamContent);
                 }
-                // End partial message display
-                userInterface.EndPartialMessage();
 
-                // Add the complete assistant message to history
+                _userInterface.EndPartialMessage();
+
                 var assistantMessage = new Message
                 {
                     Role = "assistant",
-                    Content = [ContentBlock.FromString(assistantMessageBuilder.ToString())]
+                    Content = new List<ContentBlock> { ContentBlock.FromString(assistantMessageBuilder.ToString()) }
                 };
+
                 _messageHistory.AddMessage(assistantMessage);
+                OnMessageAdded(assistantMessage);
             }
         }
     }
