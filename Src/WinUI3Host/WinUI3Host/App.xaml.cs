@@ -49,7 +49,7 @@ namespace WinUI3Host
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<IUserInterface>(serviceProvider => serviceProvider.GetRequiredService<MainViewModel>());
             services.AddTransient<MainWindow>();
-            services.AddTransient<OrchestrationAgent>();
+            services.AddTransient<ObservableOrchestrationAgent>();
             services.AddTransient<IToolRegistry, ToolRegistry>();
             services.AddTransient<IPromptService, PromptService>();
             services.AddTransient<ISandboxFileManager, SandboxFileManager>();
@@ -66,7 +66,7 @@ namespace WinUI3Host
             var mainWindow = Services.GetRequiredService<MainWindow>();
             mainWindow.Activate();
 
-            var orchestrationAgent = Services.GetRequiredService<OrchestrationAgent>();
+            var orchestrationAgent = Services.GetRequiredService<ObservableOrchestrationAgent>();
             await orchestrationAgent.StartConversationAsync();
         }
     }

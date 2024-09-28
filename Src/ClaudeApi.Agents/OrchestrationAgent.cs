@@ -11,9 +11,9 @@ namespace ClaudeApi.Agents
 {
     public partial class OrchestrationAgent
     {
-        private readonly IMessageHistory _messageHistory;
-        private readonly IUserInterface _userInterface;
-        private readonly ClaudeClient _client;
+        protected readonly IMessageHistory _messageHistory;
+        protected readonly IUserInterface _userInterface;
+        protected readonly ClaudeClient _client;
 
         public OrchestrationAgent(ClaudeClient client, IUserInterface userInterface, IMessageHistory messageHistory)
         {
@@ -26,12 +26,12 @@ namespace ClaudeApi.Agents
 
         public event Action<Message>? MessageAdded;
 
-        private void OnMessageAdded(Message message)
+        protected virtual void OnMessageAdded(Message message)
         {
             MessageAdded?.Invoke(message);
         }
 
-        public async Task StartConversationAsync()
+        public virtual async Task StartConversationAsync()
         {
             _client.DiscoverTools(typeof(TestTools).Assembly);
             while (true)

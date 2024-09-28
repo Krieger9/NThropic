@@ -22,7 +22,11 @@ namespace ClaudeApi.Agents
         public void RemoveMessage(Message message)
         {
             Messages.Remove(message);
-            // Optionally notify observers about removal
+            NotifyObservers(new Message
+            {
+                Role = "Removed",
+                Content = new List<ContentBlock> { ContentBlock.FromString($"Message with role {message.Role} removed") }
+            });
         }
 
         public Message? GetMessageByRole(string role)
