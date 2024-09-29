@@ -1,11 +1,12 @@
 ﻿using ClaudeApi.Agents;
+using ClaudeApi.Messages;
 using System.Text;
 
 namespace CommandLineHost
 {
     internal class ConsoleUserInterface : IUserInterface
     {
-        private readonly StringBuilder _partialMessageBuilder = new ();
+        private readonly StringBuilder _partialMessageBuilder = new();
 
         public Task<string> PromptAsync(string message)
         {
@@ -14,9 +15,26 @@ namespace CommandLineHost
             return Task.FromResult(Console.ReadLine() ?? "");
         }
 
-        public void Message(string message)
+        public void Message(Message message)
         {
-            Console.WriteLine(message);
+            if (message.Content is List<ContentBlock> contentBlocks)
+            {
+                foreach (var contentBlock in contentBlocks)
+                {
+                    if (contentBlock is TextContentBlock textContentBlock)
+                    {
+                        Console.WriteLine(textContentBlock.Text);
+                    }
+                    else
+                    {
+                        Console.WriteLine(contentBlock.ToString());
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine(message.ToString());
+            }
         }
 
         public void ReceivePartialMessage(string partialMessage)

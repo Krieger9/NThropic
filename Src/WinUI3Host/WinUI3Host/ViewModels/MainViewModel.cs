@@ -3,6 +3,7 @@ using ClaudeApi.Agents;
 using ClaudeApi.Messages;
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -12,13 +13,13 @@ using WinUI3Host.Core;
 
 namespace WinUI3Host.ViewModels
 {
-    public class MainViewModel : INotifyPropertyChanged, IUserInterface
+    public class MainViewModel : IReactiveUserInterface
     {
         private string _messageText;
         private readonly StringBuilder _partialMessageBuilder = new();
         private TaskCompletionSource<string> _promptCompletionSource;
-
-        public ObservableCollection<Message> Messages { get; }
+        private readonly ObservableCollection<Message> _messages = new();
+        public ObservableCollection<Message> Messages => _messages;
 
         public string MessageText
         {
@@ -36,9 +37,8 @@ namespace WinUI3Host.ViewModels
 
         public ICommand SendMessageCommand { get; }
 
-        public MainViewModel(ClaudeClient apiClient)
+        public MainViewModel()
         {
-            Messages = new ObservableCollection<Message>();
             SendMessageCommand = new RelayCommand(SendMessage, CanSendMessage);
         }
 
@@ -49,9 +49,26 @@ namespace WinUI3Host.ViewModels
 
         private void SendMessage()
         {
-            // Complete the TaskCompletionSource with the user input
             _promptCompletionSource?.SetResult(MessageText);
-            MessageText = string.Empty; // Clear the input field
+            MessageText = string.Empty;
+        }
+
+        private void OnModelMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (Message newMessage in e.NewItems)
+                {
+                    _messages.Add(newMessage);
+                }
+            }
+            if (e.OldItems != null)
+            {
+                foreach (Message oldMessage in e.OldItems)
+                {
+                    _messages.Remove(oldMessage);
+                }
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -61,38 +78,23 @@ namespace WinUI3Host.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public async Task<string> PromptAsync(string message)
+        public async Task<string> PromptAsync()
         {
-            // Create a new TaskCompletionSource to wait for user input
             _promptCompletionSource = new TaskCompletionSource<string>();
-
-            // Wait for the user to click the send button
-            string userInput = await _promptCompletionSource.Task;
-
-            // Display the prompt message (you can customize this as needed)
-            Messages.Add(new Message { Role = "system", Content = [ContentBlock.FromString(userInput)] });
-
-            // Return the user input
-            return userInput;
+            return await _promptCompletionSource.Task;
         }
 
-        public void Message(string message)
+        public void Subscribe(ObservableCollection<Message> messages)
         {
-            Messages.Add(new Message { Role = "user", Content = [ContentBlock.FromString(message)] });
-        }
+            if (messages == null)
+                throw new ArgumentNullException(nameof(messages));
 
-        public void ReceivePartialMessage(string partialMessage)
-        {
-            // Append the partial message to the StringBuilder
-            _partialMessageBuilder.Append(partialMessage);
-        }
+            messages.CollectionChanged += OnModelMessagesChanged;
 
-        public void EndPartialMessage()
-        {
-            // Finalize the partial message and add it to the Messages collection
-            var completeMessage = _partialMessageBuilder.ToString();
-            Messages.Add(new Message { Role = "system", Content =  [ContentBlock.FromString(completeMessage)] });
-            _partialMessageBuilder.Clear();
+            foreach (var message in messages)
+            {
+                _messages.Add(message);
+            }
         }
     }
 }

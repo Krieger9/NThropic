@@ -47,9 +47,9 @@ namespace WinUI3Host
             // Register your services and view models here
             services.AddSingleton<IServiceProvider>(serviceProvider => serviceProvider);
             services.AddSingleton<MainViewModel>();
-            services.AddSingleton<IUserInterface>(serviceProvider => serviceProvider.GetRequiredService<MainViewModel>());
+            services.AddSingleton<IReactiveUserInterface>(serviceProvider => serviceProvider.GetRequiredService<MainViewModel>());
             services.AddTransient<MainWindow>();
-            services.AddTransient<OrchestrationAgent>();
+            services.AddTransient<ObservableOrchestrationAgent>();
             services.AddTransient<IToolRegistry, ToolRegistry>();
             services.AddTransient<IPromptService, PromptService>();
             services.AddTransient<ISandboxFileManager, SandboxFileManager>();
@@ -63,11 +63,17 @@ namespace WinUI3Host
 
         protected async override void OnLaunched(LaunchActivatedEventArgs args)
         {
-            var mainWindow = Services.GetRequiredService<MainWindow>();
-            mainWindow.Activate();
+            try
+            {
+                var mainWindow = Services.GetRequiredService<MainWindow>();
+                mainWindow.Activate();
 
-            var orchestrationAgent = Services.GetRequiredService<OrchestrationAgent>();
-            await orchestrationAgent.StartConversationAsync();
+                var orchestrationAgent = Services.GetRequiredService<ObservableOrchestrationAgent>();
+                await orchestrationAgent.StartConversationAsync();
+            }catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ClaudeApi.Messages;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ namespace ClaudeApi.Agents
     public interface IUserInterface
     {
         Task<string> PromptAsync(string message);
-        void Message(string message);
+        void Message(Message message);
         void ReceivePartialMessage(string partialMessage);
         void EndPartialMessage();
     }
