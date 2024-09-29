@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WinUI3Host.Templates"
+    xmlns:messages="using:ClaudeApi.Messages"
+    x:Class="WinUI3Host.Templates.Templates">
+    <DataTemplate x:Key="UserMessageTemplate">
+        <StackPanel>
+            <TextBlock Text="User:" FontWeight="Bold"/>
+            <ItemsControl ItemsSource="{Binding Content}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="TextContentTemplate" x:DataType="messages:TextContentBlock">
+        <StackPanel>
+            <TextBlock Text="{Binding Text}" TextWrapping="Wrap"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <local:ContentBlockTemplateSelector x:Key="ContentBlockTemplateSelector"
+                                        TextContentTemplate="{StaticResource TextContentTemplate}"
+                                        UserMessageTemplate="{StaticResource UserMessageTemplate}"/>
+
+</ResourceDictionary>

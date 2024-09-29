@@ -29,11 +29,6 @@ namespace ClaudeApi.Messages
                 CacheControl = cacheControl
             };
         }
-
-        override public string ToString()
-        {
-            return GetContent()?.ToString() ?? string.Empty;
-        }
     }
 
     public class ContentBlock<T> : ContentBlock

@@ -48,7 +48,7 @@ namespace ClaudeApi.Agents
                 var assistantMessageBuilder = new StringBuilder();
 
                 var streamContentTask = _client.ProcessContinuousConversationAsync(
-                    _messageHistory.Messages.ToList(),
+                    [.. _messageHistory.Messages],
                     systemMessage: [ContentBlock.FromString(SystemPrompt)]);
 
                 await foreach (var streamContent in streamContentTask)

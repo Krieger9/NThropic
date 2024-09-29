@@ -16,9 +16,8 @@ namespace WinUI3Host.ViewModels
     public class MainViewModel : IReactiveUserInterface
     {
         private string _messageText;
-        private readonly StringBuilder _partialMessageBuilder = new();
         private TaskCompletionSource<string> _promptCompletionSource;
-        private readonly ObservableCollection<Message> _messages = new();
+        private readonly ObservableCollection<Message> _messages = [];
         public ObservableCollection<Message> Messages => _messages;
 
         public string MessageText
@@ -86,8 +85,7 @@ namespace WinUI3Host.ViewModels
 
         public void Subscribe(ObservableCollection<Message> messages)
         {
-            if (messages == null)
-                throw new ArgumentNullException(nameof(messages));
+            ArgumentNullException.ThrowIfNull(messages);
 
             messages.CollectionChanged += OnModelMessagesChanged;
 

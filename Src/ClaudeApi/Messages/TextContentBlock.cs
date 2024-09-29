@@ -9,10 +9,5 @@ namespace ClaudeApi.Messages
 
         [JsonProperty("text")]
         public string Text { get; set; } = string.Empty;
-
-        public override JToken? GetContent()
-        {
-            return JToken.Parse(Text);
-        }
     }
 }

@@ -62,7 +62,7 @@ namespace ClaudeApi.Messages
                 ["role"] = message?.Role
             };
 
-            if (message?.Content is List<ContentBlock>)
+            if (message?.Content is not null)
             {
                 jo["content"] = JToken.FromObject(message.Content, serializer);
             }
