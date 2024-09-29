@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="WinUI3Host.Views.Controls.MessageListControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:WinUI3Host.Views.Controls"
+    xmlns:messages="using:ClaudeApi.Messages"
+    xmlns:viewmodels="using:WinUI3Host.ViewModels">
+
+    <Grid>
+        <Grid.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="ms-appx:///Templates/Templates.xaml"/>
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </Grid.Resources>
+        <ListView ItemsSource="{x:Bind Messages, Mode=OneWay}" Margin="10">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="messages:Message">
+                    <StackPanel>
+                        <TextBlock Text="{x:Bind Role}" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ItemsControl ItemsSource="{x:Bind Content}">
+                            <ItemsControl.ItemTemplateSelector>
+                                <StaticResource ResourceKey="ContentBlockTemplateSelector"/>
+                            </ItemsControl.ItemTemplateSelector>
+                        </ItemsControl>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</UserControl>

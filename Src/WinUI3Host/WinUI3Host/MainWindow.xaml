@@ -8,6 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewmodels="using:WinUI3Host.ViewModels"
     xmlns:messages="using:ClaudeApi.Messages"
+    xmlns:controls="using:WinUI3Host.Views.Controls"
     mc:Ignorable="d">
 
     <Grid x:Name="rootGrid">
@@ -24,20 +25,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <ListView ItemsSource="{x:Bind ViewModel.Messages, Mode=OneWay}" Grid.Row="0" Margin="10">
-            <ListView.ItemTemplate>
-                <DataTemplate x:DataType="messages:Message">
-                    <StackPanel>
-                        <TextBlock Text="{x:Bind Role}" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <ItemsControl ItemsSource="{x:Bind Content}">
-                            <ItemsControl.ItemTemplateSelector>
-                                <StaticResource ResourceKey="ContentBlockTemplateSelector"/>
-                            </ItemsControl.ItemTemplateSelector>
-                        </ItemsControl>
-                    </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+        <!-- Replace ListView with MessageListControl -->
+        <controls:MessageListControl Messages="{x:Bind ViewModel.Messages, Mode=OneWay}" Grid.Row="0" Margin="10"/>
 
         <Grid Grid.Row="1" Margin="10">
             <Grid.ColumnDefinitions>
