@@ -12,31 +12,11 @@
     mc:Ignorable="d">
 
     <Grid x:Name="rootGrid">
-        <Grid.Resources>
-            <ResourceDictionary>
-                <ResourceDictionary.MergedDictionaries>
-                    <ResourceDictionary Source="Templates/Templates.xaml"/>
-                </ResourceDictionary.MergedDictionaries>
-            </ResourceDictionary>
-        </Grid.Resources>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Replace ListView with MessageListControl -->
-        <controls:MessageListControl Messages="{x:Bind ViewModel.Messages, Mode=OneWay}" Grid.Row="0" Margin="10"/>
-
-        <Grid Grid.Row="1" Margin="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Text="{x:Bind ViewModel.MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                     PlaceholderText="Type your message here..." Grid.Column="0"/>
-            <Button Content="Send" Grid.Column="1" Margin="10,0,0,0" 
-                    Command="{x:Bind ViewModel.SendMessageCommand}"/>
-        </Grid>
+        <controls:ChatControl ChatData ="{x:Bind ViewModel}"  Grid.Row="0" Margin="10" />
     </Grid>
 </Window>

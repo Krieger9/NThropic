@@ -13,86 +13,39 @@ using WinUI3Host.Core;
 
 namespace WinUI3Host.ViewModels
 {
-    public class MainViewModel : IReactiveUserInterface
+    public class MainViewModel : IChatViewModel
     {
-        private string _messageText;
-        private TaskCompletionSource<string> _promptCompletionSource;
-        private readonly ObservableCollection<Message> _messages = [];
-        public ObservableCollection<Message> Messages => _messages;
-
-        public string MessageText
-        {
-            get => _messageText;
-            set
-            {
-                if (_messageText != value)
-                {
-                    _messageText = value;
-                    OnPropertyChanged();
-                    ((RelayCommand)SendMessageCommand).RaiseCanExecuteChanged();
-                }
-            }
-        }
-
-        public ICommand SendMessageCommand { get; }
+        private readonly ChatViewModel _chatViewModel;
 
         public MainViewModel()
         {
-            SendMessageCommand = new RelayCommand(SendMessage, CanSendMessage);
+            _chatViewModel = new ChatViewModel();
         }
 
-        private bool CanSendMessage()
+        public ObservableCollection<Message> Messages => _chatViewModel.Messages;
+
+        public string MessageText
         {
-            return !string.IsNullOrWhiteSpace(MessageText);
+            get => _chatViewModel.MessageText;
+            set => _chatViewModel.MessageText = value;
         }
 
-        private void SendMessage()
-        {
-            _promptCompletionSource?.SetResult(MessageText);
-            MessageText = string.Empty;
-        }
+        public ICommand SendMessageCommand => _chatViewModel.SendMessageCommand;
 
-        private void OnModelMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        public event PropertyChangedEventHandler PropertyChanged
         {
-            if (e.NewItems != null)
-            {
-                foreach (Message newMessage in e.NewItems)
-                {
-                    _messages.Add(newMessage);
-                }
-            }
-            if (e.OldItems != null)
-            {
-                foreach (Message oldMessage in e.OldItems)
-                {
-                    _messages.Remove(oldMessage);
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            add => _chatViewModel.PropertyChanged += value;
+            remove => _chatViewModel.PropertyChanged -= value;
         }
 
         public async Task<string> PromptAsync()
         {
-            _promptCompletionSource = new TaskCompletionSource<string>();
-            return await _promptCompletionSource.Task;
+            return await _chatViewModel.PromptAsync();
         }
 
         public void Subscribe(ObservableCollection<Message> messages)
         {
-            ArgumentNullException.ThrowIfNull(messages);
-
-            messages.CollectionChanged += OnModelMessagesChanged;
-
-            foreach (var message in messages)
-            {
-                _messages.Add(message);
-            }
+            _chatViewModel.Subscribe(messages);
         }
     }
 }
