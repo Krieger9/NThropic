@@ -10,6 +10,8 @@ using Newtonsoft.Json.Linq;
 using Scriban;
 using System.Collections.Concurrent;
 using System.IO.Pipelines;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
@@ -26,6 +28,9 @@ namespace ClaudeApi
         private readonly ISandboxFileManager _sandboxFileManager;
         private readonly IClaudeApiService _claudeApiService;
         private readonly IPromptService _promptService;
+
+        private readonly Subject<Usage> _usageSubject = new ();
+        public IObservable<Usage> UsageStream => _usageSubject.AsObservable();
 
         public ClaudeClient(ISandboxFileManager sandboxFileManager, 
             IToolManagementService toolManagementService, 
@@ -168,6 +173,10 @@ namespace ClaudeApi
 
                     sseProcessor.OnMessageStop += (messageResponse) =>
                     {
+                        if (messageResponse?.Usage != null)
+                        {
+                            _usageSubject.OnNext(messageResponse.Usage);
+                        }
                     };
 
                     var response = await apiCall;

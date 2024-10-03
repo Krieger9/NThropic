@@ -14,8 +14,8 @@ namespace ClaudeApi.DependencyInjection
         {
             return services.AddSingleton<IClaudeApiService, ClaudeApiService>()
             .AddTransient<IToolManagementService, ToolManagementService>()
-            .AddSingleton<IToolExecutionService, ToolExecutionService>()
-            .AddSingleton<IToolDiscoveryService, ToolDiscoveryService>();
+            .AddTransient<IToolExecutionService, ToolExecutionService>()
+            .AddTransient<IToolDiscoveryService, ToolDiscoveryService>();
         }
     }
 }

@@ -12,5 +12,6 @@ namespace ClaudeApi.Agents
     {
         Task<string> PromptAsync();
         void Subscribe(ObservableCollection<Message> messages);
+        //void Subscribe(IObservable<Usage> usageStream);
     }
 }

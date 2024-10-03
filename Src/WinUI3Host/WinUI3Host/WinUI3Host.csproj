@@ -29,6 +29,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.1.24431.7" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240829007" />
+    <PackageReference Include="R3" Version="1.2.9" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>

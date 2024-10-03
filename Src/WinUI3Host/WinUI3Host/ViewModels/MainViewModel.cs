@@ -1,6 +1,7 @@
 using ClaudeApi;
 using ClaudeApi.Agents;
 using ClaudeApi.Messages;
+using R3;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -13,24 +14,32 @@ using WinUI3Host.Core;
 
 namespace WinUI3Host.ViewModels
 {
-    public class MainViewModel : IChatViewModel
+    public class MainViewModel : IChatViewModel, IDisposable
     {
         private readonly ChatViewModel _chatViewModel;
+        private readonly IUsageStatsViewModel _lastRequestUsageStats;
+        private readonly IUsageStatsViewModel _totalUsageStats;
+        private IDisposable _usageSubscription;
 
         public MainViewModel()
         {
             _chatViewModel = new ChatViewModel();
+            _lastRequestUsageStats = new UsageStatsViewModel(new Usage());
+            _totalUsageStats = new UsageStatsViewModel(new Usage());
         }
 
         public ObservableCollection<Message> Messages => _chatViewModel.Messages;
 
-        public string MessageText
+        public ReactiveProperty<string> MessageText
         {
             get => _chatViewModel.MessageText;
             set => _chatViewModel.MessageText = value;
         }
 
-        public ICommand SendMessageCommand => _chatViewModel.SendMessageCommand;
+        public ReactiveCommand SendMessageCommand => _chatViewModel.SendMessageCommand;
+
+        public IUsageStatsViewModel LastRequestUsageStats => _lastRequestUsageStats;
+        public IUsageStatsViewModel TotalUsageStats => _totalUsageStats;
 
         public event PropertyChangedEventHandler PropertyChanged
         {
@@ -46,6 +55,33 @@ namespace WinUI3Host.ViewModels
         public void Subscribe(ObservableCollection<Message> messages)
         {
             _chatViewModel.Subscribe(messages);
+        }
+
+        public void Subscribe(IObservable<Usage> usageStream)
+        {
+            // Clean up existing subscription if any
+            _usageSubscription?.Dispose();
+            _usageSubscription = usageStream.Subscribe(UpdateUsageStats);
+        }
+
+        private void UpdateUsageStats(Usage usage)
+        {
+            // Update last request usage stats
+            _lastRequestUsageStats.InputTokens.Value = usage.InputTokens;
+            _lastRequestUsageStats.OutputTokens.Value = usage.OutputTokens;
+            _lastRequestUsageStats.CacheCreationInputTokens.Value = usage.CacheCreationInputTokens;
+            _lastRequestUsageStats.CacheReadInputTokens.Value = usage.CacheReadInputTokens;
+
+            // Accumulate total usage stats
+            _totalUsageStats.InputTokens.Value += usage.InputTokens;
+            _totalUsageStats.OutputTokens.Value += usage.OutputTokens;
+            _totalUsageStats.CacheCreationInputTokens.Value += usage.CacheCreationInputTokens;
+            _totalUsageStats.CacheReadInputTokens.Value += usage.CacheReadInputTokens;
+        }
+
+        public void Dispose()
+        {
+            _usageSubscription?.Dispose();
         }
     }
 }

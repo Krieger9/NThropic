@@ -20,7 +20,7 @@ namespace ClaudeApi.Services
 
         public async Task<Message> ParsePromptAsync(Prompt prompt)
         {
-            var filePath = Path.Combine(_promptsFolder, $"{prompt.Name}.scriban");
+            var filePath = Path.Combine(AppContext.BaseDirectory, _promptsFolder, $"{prompt.Name}.scriban");
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException($"The prompt file '{filePath}' does not exist.");

@@ -22,8 +22,8 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox Text="{x:Bind ChatData.MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                     PlaceholderText="Type your message here..." Grid.Column="0"/>
+            <TextBox Text="{x:Bind ChatData.MessageText.Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                     PlaceholderText="Type your message here..." Grid.Column="0" KeyDown="TextBox_KeyDown"/>
             <Button Content="Send" Grid.Column="1" Margin="10,0,0,0" 
                     Command="{x:Bind ChatData.SendMessageCommand}"/>
         </Grid>

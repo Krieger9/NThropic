@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -144,52 +143,5 @@ namespace ClaudeApi
             logger.LogError("Error event received: {ErrorMessage}", errorMessage);
             OnError?.Invoke(errorMessage);
         }
-    }
-
-    public class SseEvent
-    {
-        [JsonProperty("message")]
-        public MessagesResponse? Message { get; set; }
-
-        [JsonProperty("type")]
-        public string? Type { get; set; }
-
-        [JsonProperty("index")]
-        public int Index { get; set; }
-
-        [JsonProperty("content_block")]
-        public ContentBlock? ContentBlock { get; set; }
-
-        [JsonProperty("delta")]
-        public ContentBlock? Delta { get; set; }
-
-        [JsonProperty("error")]
-        public Error? Error { get; set; }
-    }
-
-    public class ToolUse(string id, string toolName)
-    {
-        public string Id { get; } = id;
-        public string ToolName { get; } = toolName;
-        public JObject Input { get; private set; } = [];
-
-        private readonly StringBuilder _inputAccumulator = new ();
-
-        public void AccumulateInput(string partialJson)
-        {
-            _inputAccumulator.Append(partialJson);
-        }
-
-        public JObject CompleteInputAccumulation()
-        {
-            Input = JObject.Parse(_inputAccumulator.ToString());
-            return Input;
-        }
-    }
-
-    public class Error
-    {
-        [JsonProperty("message")]
-        public string? Message { get; set; }
     }
 }

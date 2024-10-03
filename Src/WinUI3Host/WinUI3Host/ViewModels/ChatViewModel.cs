@@ -1,6 +1,7 @@
 using ClaudeApi;
 using ClaudeApi.Agents;
 using ClaudeApi.Messages;
+using R3;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -15,12 +16,12 @@ namespace WinUI3Host.ViewModels
 {
     public class ChatViewModel : IChatViewModel
     {
-        private string _messageText;
         private TaskCompletionSource<string> _promptCompletionSource;
-        private readonly ObservableCollection<Message> _messages = [];
+        private readonly ObservableCollection<Message> _messages = new ObservableCollection<Message>();
         public ObservableCollection<Message> Messages => _messages;
 
-        public string MessageText
+        private ReactiveProperty<string> _messageText;
+        public ReactiveProperty<string> MessageText
         {
             get => _messageText;
             set
@@ -29,27 +30,28 @@ namespace WinUI3Host.ViewModels
                 {
                     _messageText = value;
                     OnPropertyChanged();
-                    ((RelayCommand)SendMessageCommand).RaiseCanExecuteChanged();
                 }
             }
         }
 
-        public ICommand SendMessageCommand { get; }
+        public ReactiveCommand SendMessageCommand { get; }
 
         public ChatViewModel()
         {
-            SendMessageCommand = new RelayCommand(SendMessage, CanSendMessage);
-        }
+            _messageText = new ReactiveProperty<string>();
 
-        private bool CanSendMessage()
-        {
-            return !string.IsNullOrWhiteSpace(MessageText);
+            SendMessageCommand = _messageText
+                .Select(text => !string.IsNullOrWhiteSpace(text))
+                .ToReactiveCommand();
+
+            SendMessageCommand.Subscribe(_ => SendMessage());
         }
 
         private void SendMessage()
         {
-            _promptCompletionSource?.SetResult(MessageText);
-            MessageText = string.Empty;
+            _promptCompletionSource?.SetResult(MessageText.Value);
+            MessageText.Value = string.Empty;
+            OnPropertyChanged(nameof(MessageText));
         }
 
         private void OnModelMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
