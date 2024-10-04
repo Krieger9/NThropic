@@ -20,7 +20,9 @@
     <None Remove="Templates\Templates.xaml" />
     <None Remove="Views\Controls\ChaControl.xaml" />
     <None Remove="Views\Controls\ChatControl.xaml" />
+    <None Remove="Views\Controls\FilesList.xaml" />
     <None Remove="Views\Controls\MessageListControl.xaml" />
+    <None Remove="Views\Controls\UsageStatsControl.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +45,12 @@
     <None Update="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\Controls\FilesList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\Controls\UsageStatsControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\Controls\ChatControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

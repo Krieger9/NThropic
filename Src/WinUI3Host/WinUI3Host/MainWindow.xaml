@@ -12,11 +12,21 @@
     mc:Ignorable="d">
 
     <Grid x:Name="rootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <controls:ChatControl ChatData ="{x:Bind ViewModel}"  Grid.Row="0" Margin="10" />
+        <controls:ChatControl ChatData="{x:Bind ViewModel}" Grid.Column="0" Grid.Row="0" Margin="10" />
+
+        <StackPanel Grid.Column="1" Grid.Row="0" Margin="10">
+            <controls:UsageStatsControl DataContext="{x:Bind ViewModel.LastRequestUsageStats}" Margin="0,0,0,10"/>
+            <controls:UsageStatsControl DataContext="{x:Bind ViewModel.TotalUsageStats}" />
+            <controls:FilesList DataContext="{x:Bind ViewModel.FilesListViewModel}" Margin="0,10,0,0"/>
+        </StackPanel>
     </Grid>
 </Window>

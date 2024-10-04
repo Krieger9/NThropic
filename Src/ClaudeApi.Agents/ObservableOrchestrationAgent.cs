@@ -24,6 +24,8 @@ namespace ClaudeApi.Agents
             _client = client;
             _userInterface = userInterface;
             _userInterface.Subscribe(MessageHistory.Messages);
+            _userInterface.Subscribe(_client.UsageStream);
+            _userInterface.SubscribeToContextFiles(_client.ContextFilesStream);
         }
 
         public async Task StartConversationAsync()

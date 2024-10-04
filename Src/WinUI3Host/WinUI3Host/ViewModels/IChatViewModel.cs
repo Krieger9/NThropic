@@ -7,7 +7,7 @@ using System.Windows.Input;
 
 namespace WinUI3Host.ViewModels
 {
-    public interface IChatViewModel : IReactiveUserInterface, INotifyPropertyChanged
+    public interface IChatViewModel : INotifyPropertyChanged
     {
         ObservableCollection<Message> Messages { get; }
         ReactiveProperty<string> MessageText { get; set; }

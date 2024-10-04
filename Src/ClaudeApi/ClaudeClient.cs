@@ -2,18 +2,13 @@
 using ClaudeApi.Prompts;
 using ClaudeApi.Services;
 using ClaudeApi.Tools;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Scriban;
 using System.Collections.Concurrent;
-using System.IO.Pipelines;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
-using System.Text;
 using System.Threading.Channels;
 
 namespace ClaudeApi
@@ -31,6 +26,9 @@ namespace ClaudeApi
 
         private readonly Subject<Usage> _usageSubject = new ();
         public IObservable<Usage> UsageStream => _usageSubject.AsObservable();
+
+        private readonly Subject<List<string>> _contextFilesSubject = new();
+        public IObservable<List<string>> ContextFilesStream => _contextFilesSubject.AsObservable();
 
         public ClaudeClient(ISandboxFileManager sandboxFileManager, 
             IToolManagementService toolManagementService, 
@@ -296,6 +294,7 @@ namespace ClaudeApi
             if (!_contextFiles.Contains(filePath))
             {
                 _contextFiles.Add(filePath);
+                _contextFilesSubject.OnNext(_contextFiles);
                 _logger.LogInformation("Added context file: {FilePath}", filePath);
             }
             else

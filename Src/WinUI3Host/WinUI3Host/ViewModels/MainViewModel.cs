@@ -1,24 +1,20 @@
-using ClaudeApi;
 using ClaudeApi.Agents;
 using ClaudeApi.Messages;
 using R3;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using WinUI3Host.Core;
 
 namespace WinUI3Host.ViewModels
 {
-    public class MainViewModel : IChatViewModel, IDisposable
+    public class MainViewModel : IChatViewModel, IDisposable, IReactiveUserInterface
     {
         private readonly ChatViewModel _chatViewModel;
         private readonly IUsageStatsViewModel _lastRequestUsageStats;
         private readonly IUsageStatsViewModel _totalUsageStats;
+        private readonly IFilesListViewModel _fileListViewModel;
         private IDisposable _usageSubscription;
 
         public MainViewModel()
@@ -26,6 +22,7 @@ namespace WinUI3Host.ViewModels
             _chatViewModel = new ChatViewModel();
             _lastRequestUsageStats = new UsageStatsViewModel(new Usage());
             _totalUsageStats = new UsageStatsViewModel(new Usage());
+            _fileListViewModel = new FilesListViewModel();
         }
 
         public ObservableCollection<Message> Messages => _chatViewModel.Messages;
@@ -40,6 +37,7 @@ namespace WinUI3Host.ViewModels
 
         public IUsageStatsViewModel LastRequestUsageStats => _lastRequestUsageStats;
         public IUsageStatsViewModel TotalUsageStats => _totalUsageStats;
+        public IFilesListViewModel FilesListViewModel => _fileListViewModel;
 
         public event PropertyChangedEventHandler PropertyChanged
         {
@@ -64,23 +62,21 @@ namespace WinUI3Host.ViewModels
             _usageSubscription = usageStream.Subscribe(UpdateUsageStats);
         }
 
+        public void SubscribeToContextFiles(IObservable<List<string>> file_names)
+        {
+            _fileListViewModel.Subscribe(file_names);
+        }
+
         private void UpdateUsageStats(Usage usage)
         {
-            // Update last request usage stats
-            _lastRequestUsageStats.InputTokens.Value = usage.InputTokens;
-            _lastRequestUsageStats.OutputTokens.Value = usage.OutputTokens;
-            _lastRequestUsageStats.CacheCreationInputTokens.Value = usage.CacheCreationInputTokens;
-            _lastRequestUsageStats.CacheReadInputTokens.Value = usage.CacheReadInputTokens;
-
+            _lastRequestUsageStats.Update(usage);
             // Accumulate total usage stats
-            _totalUsageStats.InputTokens.Value += usage.InputTokens;
-            _totalUsageStats.OutputTokens.Value += usage.OutputTokens;
-            _totalUsageStats.CacheCreationInputTokens.Value += usage.CacheCreationInputTokens;
-            _totalUsageStats.CacheReadInputTokens.Value += usage.CacheReadInputTokens;
+            _totalUsageStats.AddUsage(usage);
         }
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             _usageSubscription?.Dispose();
         }
     }

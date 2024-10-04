@@ -1,5 +1,3 @@
-using ClaudeApi;
-using ClaudeApi.Agents;
 using ClaudeApi.Messages;
 using R3;
 using System;
@@ -7,10 +5,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using WinUI3Host.Core;
 
 namespace WinUI3Host.ViewModels
 {
