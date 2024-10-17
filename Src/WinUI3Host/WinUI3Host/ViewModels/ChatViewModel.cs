@@ -1,4 +1,5 @@
 using ClaudeApi.Messages;
+using Microsoft.UI.Dispatching;
 using R3;
 using System;
 using System.Collections.ObjectModel;
@@ -40,6 +41,8 @@ namespace WinUI3Host.ViewModels
                 .ToReactiveCommand();
 
             SendMessageCommand.Subscribe(_ => SendMessage());
+
+            _messages.CollectionChanged += OnMessagesCollectionChanged;
         }
 
         private void SendMessage()
@@ -49,22 +52,55 @@ namespace WinUI3Host.ViewModels
             OnPropertyChanged(nameof(MessageText));
         }
 
-        private void OnModelMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        public void UpdateContentBlockText(TextContentBlock contentBlock, string newText)
+        {
+            DispatcherQueue.GetForCurrentThread().TryEnqueue(() =>
+            {
+                contentBlock.Text = newText;
+            });
+        }
+
+        private void OnMessagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
                 foreach (Message newMessage in e.NewItems)
                 {
-                    _messages.Add(newMessage);
+                    newMessage.PropertyChanged += OnMessagePropertyChanged;
+                    foreach (var contentBlock in newMessage.Content)
+                    {
+                        if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                        {
+                            notifyPropertyChanged.PropertyChanged += OnContentBlockPropertyChanged;
+                        }
+                    }
                 }
             }
+
             if (e.OldItems != null)
             {
                 foreach (Message oldMessage in e.OldItems)
                 {
-                    _messages.Remove(oldMessage);
+                    oldMessage.PropertyChanged -= OnMessagePropertyChanged;
+                    foreach (var contentBlock in oldMessage.Content)
+                    {
+                        if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                        {
+                            notifyPropertyChanged.PropertyChanged -= OnContentBlockPropertyChanged;
+                        }
+                    }
                 }
             }
+        }
+
+        private void OnMessagePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(Messages));
+        }
+
+        private void OnContentBlockPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(Messages));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -89,6 +125,24 @@ namespace WinUI3Host.ViewModels
             foreach (var message in messages)
             {
                 _messages.Add(message);
+            }
+        }
+
+        private void OnModelMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (Message newMessage in e.NewItems)
+                {
+                    _messages.Add(newMessage);
+                }
+            }
+            if (e.OldItems != null)
+            {
+                foreach (Message oldMessage in e.OldItems)
+                {
+                    _messages.Remove(oldMessage);
+                }
             }
         }
     }

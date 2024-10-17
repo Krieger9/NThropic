@@ -5,6 +5,7 @@
     xmlns:local="using:WinUI3Host.Templates"
     xmlns:messages="using:ClaudeApi.Messages"
     x:Class="WinUI3Host.Templates.Templates">
+
     <DataTemplate x:Key="UserMessageTemplate">
         <StackPanel>
             <TextBlock Text="User:" FontWeight="Bold"/>
@@ -27,5 +28,4 @@
     <local:ContentBlockTemplateSelector x:Key="ContentBlockTemplateSelector"
                                         TextContentTemplate="{StaticResource TextContentTemplate}"
                                         UserMessageTemplate="{StaticResource UserMessageTemplate}"/>
-
 </ResourceDictionary>

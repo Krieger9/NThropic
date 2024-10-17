@@ -1,5 +1,6 @@
 ﻿using ClaudeApi.Agents;
 using ClaudeApi.Messages;
+using System.Collections.ObjectModel;
 using System.Text;
 
 namespace CommandLineHost
@@ -17,7 +18,7 @@ namespace CommandLineHost
 
         public void Message(Message message)
         {
-            if (message.Content is List<ContentBlock> contentBlocks)
+            if (message.Content is ObservableCollection<ContentBlock> contentBlocks)
             {
                 foreach (var contentBlock in contentBlocks)
                 {

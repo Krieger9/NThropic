@@ -14,5 +14,6 @@ namespace ClaudeApi.Agents
         void Subscribe(ObservableCollection<Message> messages);
         void Subscribe(IObservable<Usage> usageStream);
         void SubscribeToContextFiles(IObservable<List<string>> contextFilesStream);
+        void UpdateContentBlockText(TextContentBlock userInputContentBlock, string v);
     }
 }

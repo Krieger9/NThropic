@@ -21,7 +21,7 @@ namespace ClaudeApi.Messages
         public abstract JToken? GetContent();
 
         // Helper method to create a ContentBlock from a string
-        public static ContentBlock FromString(string content, JObject? cacheControl = null)
+        public static TextContentBlock FromString(string content = "", JObject? cacheControl = null)
         {
             return new TextContentBlock()
             {

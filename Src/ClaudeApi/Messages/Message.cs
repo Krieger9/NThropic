@@ -1,23 +1,66 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace ClaudeApi.Messages
 {
 
     [JsonConverter(typeof(MessageConverter))]
-    public class Message
+    public class Message : INotifyPropertyChanged
     {
+        private string? _role;
+        private ObservableCollection<ContentBlock>? _content = new();
+
         [JsonProperty("role")]
-        public string? Role { get; set; }
+        public string? Role
+        {
+            get => _role;
+            set
+            {
+                if (_role != value)
+                {
+                    _role = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         [JsonProperty("content")]
-        public List<ContentBlock>? Content { get; set; } // Change to object to support both string and List<ContentBlock>
+        public ObservableCollection<ContentBlock>? Content
+        {
+            get => _content;
+            set
+            {
+                if (_content != value)
+                {
+                    _content = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public void AppendContent(ContentBlock contentBlock)
+        {
+            if (_content is null)
+            {
+                _content = new ObservableCollection<ContentBlock>();
+            }
+            _content.Add(contentBlock);
+            OnPropertyChanged(nameof(Content));
+        }
 
         public override string ToString()
         {
-            if(Content == null) return string.Empty;
-            else
-            return $"{Role}: {string.Join("\n", Content)}";
+            return $"{Role}: {string.Join("", Content?.Select(cb => cb.ToString()) ?? Enumerable.Empty<string>())}";
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 
@@ -39,12 +82,11 @@ namespace ClaudeApi.Messages
             JToken? contentToken = jo["content"];
             if (contentToken?.Type == JTokenType.String)
             {
-                message.Content = [ContentBlock.FromString(contentToken.ToString())];
+                message.Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(contentToken.ToString()) };
             }
-
             else if (contentToken?.Type == JTokenType.Array)
             {
-                message.Content = contentToken.ToObject<List<ContentBlock>>(serializer);
+                message.Content = contentToken.ToObject<ObservableCollection<ContentBlock>>(serializer);
             }
             else
             {

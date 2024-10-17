@@ -1,5 +1,6 @@
 using ClaudeApi.Agents;
 using ClaudeApi.Messages;
+using Microsoft.UI.Dispatching;
 using R3;
 using System;
 using System.Collections.Generic;
@@ -78,6 +79,14 @@ namespace WinUI3Host.ViewModels
         {
             GC.SuppressFinalize(this);
             _usageSubscription?.Dispose();
+        }
+
+        public void UpdateContentBlockText(TextContentBlock userInputContentBlock, string streamContent)
+        {
+            DispatcherQueue.GetForCurrentThread().TryEnqueue(async () =>
+             {
+                 userInputContentBlock.Text = string.Concat(userInputContentBlock.Text, streamContent);
+             });
         }
     }
 }

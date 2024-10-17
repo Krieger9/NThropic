@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ClaudeApi.Agents.Tools;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace ClaudeApi.Agents
 {
@@ -26,6 +28,33 @@ namespace ClaudeApi.Agents
             _userInterface.Subscribe(MessageHistory.Messages);
             _userInterface.Subscribe(_client.UsageStream);
             _userInterface.SubscribeToContextFiles(_client.ContextFilesStream);
+
+            _messageHistory.Messages.CollectionChanged += OnMessagesCollectionChanged;
+        }
+
+        private void OnMessagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach (Message newMessage in e.NewItems)
+                {
+                    newMessage.PropertyChanged += OnMessagePropertyChanged;
+                }
+            }
+
+            if (e.OldItems != null)
+            {
+                foreach (Message oldMessage in e.OldItems)
+                {
+                    oldMessage.PropertyChanged -= OnMessagePropertyChanged;
+                }
+            }
+        }
+
+        private void OnMessagePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // Notify the UI that a message has changed
+            // This can be done by raising a PropertyChanged event or updating the UI directly
         }
 
         public async Task StartConversationAsync()
@@ -42,28 +71,29 @@ namespace ClaudeApi.Agents
                 var userMessage = new Message
                 {
                     Role = "user",
-                    Content = [ContentBlock.FromString(userInput)]
+                    Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(userInput) }
                 };
 
                 _messageHistory.AddMessage(userMessage);
 
-                var assistantMessageBuilder = new StringBuilder();
-
                 var streamContentTask = _client.ProcessContinuousConversationAsync(
-                    [.. _messageHistory.Messages],
-                    systemMessage: [ContentBlock.FromString(SystemPrompt)]);
+                    _messageHistory.Messages.ToList(),
+                    systemMessage: new List<ContentBlock> { ContentBlock.FromString(SystemPrompt) });
 
-                await foreach (var streamContent in streamContentTask)
-                {
-                    assistantMessageBuilder.Append(streamContent);
-                }
-
+                var userInputContentBlock = ContentBlock.FromString();
                 var assistantMessage = new Message
                 {
                     Role = "assistant",
-                    Content = [ContentBlock.FromString(assistantMessageBuilder.ToString())]
+                    Content = new ObservableCollection<ContentBlock> { userInputContentBlock }
                 };
                 _messageHistory.AddMessage(assistantMessage);
+
+                await foreach (var streamContent in streamContentTask)
+                {
+                    // Update the UI incrementally
+                    _userInterface.UpdateContentBlockText(userInputContentBlock, streamContent);
+                    await Task.Delay(50);
+                }
             }
         }
     }
