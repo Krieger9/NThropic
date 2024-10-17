@@ -10,21 +10,18 @@ using System.Threading.Tasks;
 
 namespace WinUI3Host.ViewModels
 {
-    public class MainViewModel : IChatViewModel, IDisposable, IReactiveUserInterface
+    public class MainViewModel(
+            IChatViewModel chatViewModel,
+            IUsageStatsViewModel lastRequestUsageStats,
+            IUsageStatsViewModel totalUsageStats,
+            IFilesListViewModel fileListViewModel
+        ) : IChatViewModel, IDisposable, IReactiveUserInterface
     {
-        private readonly ChatViewModel _chatViewModel;
-        private readonly IUsageStatsViewModel _lastRequestUsageStats;
-        private readonly IUsageStatsViewModel _totalUsageStats;
-        private readonly IFilesListViewModel _fileListViewModel;
+        private readonly IChatViewModel _chatViewModel = chatViewModel;
+        private readonly IUsageStatsViewModel _lastRequestUsageStats = lastRequestUsageStats;
+        private readonly IUsageStatsViewModel _totalUsageStats = totalUsageStats;
+        private readonly IFilesListViewModel _fileListViewModel = fileListViewModel;
         private IDisposable _usageSubscription;
-
-        public MainViewModel()
-        {
-            _chatViewModel = new ChatViewModel();
-            _lastRequestUsageStats = new UsageStatsViewModel(new Usage());
-            _totalUsageStats = new UsageStatsViewModel(new Usage());
-            _fileListViewModel = new FilesListViewModel();
-        }
 
         public ObservableCollection<Message> Messages => _chatViewModel.Messages;
 
@@ -84,9 +81,9 @@ namespace WinUI3Host.ViewModels
         public void UpdateContentBlockText(TextContentBlock userInputContentBlock, string streamContent)
         {
             DispatcherQueue.GetForCurrentThread().TryEnqueue(() =>
-             {
-                 userInputContentBlock.Text = string.Concat(userInputContentBlock.Text, streamContent);
-             });
+            {
+                userInputContentBlock.Text = string.Concat(userInputContentBlock.Text, streamContent);
+            });
         }
     }
 }

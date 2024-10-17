@@ -2,6 +2,7 @@
 using ClaudeApi.Agents;
 using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.DependencyInjection;
+using ClaudeApi.Messages;
 using ClaudeApi.Services;
 using ClaudeApi.Tools;
 using Microsoft.Extensions.Configuration;
@@ -58,6 +59,12 @@ namespace WinUI3Host
                 .AddClaudApi()
                 .AddNThropicAgents();
 
+            // Register additional dependencies for MainViewModel as transient
+            services.AddTransient<IChatViewModel, ChatViewModel>();
+            services.AddTransient<IUsageStatsViewModel, UsageStatsViewModel>();
+            services.AddTransient<IFilesListViewModel, FilesListViewModel>();
+            services.AddTransient<Usage>();
+
             return services.BuildServiceProvider();
         }
 
@@ -70,7 +77,8 @@ namespace WinUI3Host
 
                 var orchestrationAgent = Services.GetRequiredService<ObservableOrchestrationAgent>();
                 await orchestrationAgent.StartConversationAsync();
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex);
             }
