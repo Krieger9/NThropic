@@ -13,7 +13,7 @@ namespace WinUI3Host.ViewModels
     public class ChatViewModel : IChatViewModel
     {
         private TaskCompletionSource<string> _promptCompletionSource;
-        private readonly ObservableCollection<Message> _messages = new ObservableCollection<Message>();
+        private readonly ObservableCollection<Message> _messages = [];
         public ObservableCollection<Message> Messages => _messages;
 
         private ReactiveProperty<string> _messageText;
@@ -52,7 +52,7 @@ namespace WinUI3Host.ViewModels
             OnPropertyChanged(nameof(MessageText));
         }
 
-        public void UpdateContentBlockText(TextContentBlock contentBlock, string newText)
+        public static void UpdateContentBlockText(TextContentBlock contentBlock, string newText)
         {
             DispatcherQueue.GetForCurrentThread().TryEnqueue(() =>
             {

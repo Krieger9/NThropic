@@ -83,7 +83,7 @@ namespace WinUI3Host.ViewModels
 
         public void UpdateContentBlockText(TextContentBlock userInputContentBlock, string streamContent)
         {
-            DispatcherQueue.GetForCurrentThread().TryEnqueue(async () =>
+            DispatcherQueue.GetForCurrentThread().TryEnqueue(() =>
              {
                  userInputContentBlock.Text = string.Concat(userInputContentBlock.Text, streamContent);
              });

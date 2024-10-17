@@ -32,7 +32,7 @@ namespace ClaudeApi.Agents
             _messageHistory.Messages.CollectionChanged += OnMessagesCollectionChanged;
         }
 
-        private void OnMessagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
@@ -51,7 +51,7 @@ namespace ClaudeApi.Agents
             }
         }
 
-        private void OnMessagePropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnMessagePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             // Notify the UI that a message has changed
             // This can be done by raising a PropertyChanged event or updating the UI directly
@@ -71,26 +71,25 @@ namespace ClaudeApi.Agents
                 var userMessage = new Message
                 {
                     Role = "user",
-                    Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(userInput) }
+                    Content = [ ContentBlock.FromString(userInput) ]
                 };
 
                 _messageHistory.AddMessage(userMessage);
 
                 var streamContentTask = _client.ProcessContinuousConversationAsync(
-                    _messageHistory.Messages.ToList(),
-                    systemMessage: new List<ContentBlock> { ContentBlock.FromString(SystemPrompt) });
+                    [.. _messageHistory.Messages],
+                    systemMessage: [ ContentBlock.FromString(SystemPrompt) ]);
 
                 var userInputContentBlock = ContentBlock.FromString();
                 var assistantMessage = new Message
                 {
                     Role = "assistant",
-                    Content = new ObservableCollection<ContentBlock> { userInputContentBlock }
+                    Content = [ userInputContentBlock ]
                 };
                 _messageHistory.AddMessage(assistantMessage);
 
                 await foreach (var streamContent in streamContentTask)
                 {
-                    // Update the UI incrementally
                     _userInterface.UpdateContentBlockText(userInputContentBlock, streamContent);
                     await Task.Delay(50);
                 }
