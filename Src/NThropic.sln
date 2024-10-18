@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sanctuary", "Sanctuary\Sanc
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "WinUI3Host (Package)", "WinUI3Host\WinUI3Host (Package)\WinUI3Host (Package).wapproj", "{B17441AE-962F-4B2F-B533-2654AE6E5CF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinUI3Host", "WinUI3Host\WinUI3Host\WinUI3Host.csproj", "{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUI3Host", "WinUI3Host\WinUI3Host\WinUI3Host.csproj", "{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeAgents", "CodeAgents\CodeAgents.csproj", "{98ED680D-EEFA-4487-A903-A22B09E206F8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,6 +133,22 @@ Global
 		{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}.Release|x64.Build.0 = Release|x64
 		{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}.Release|x86.ActiveCfg = Release|x86
 		{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}.Release|x86.Build.0 = Release|x86
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|ARM64.Build.0 = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|x64.Build.0 = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{98ED680D-EEFA-4487-A903-A22B09E206F8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,6 +9,7 @@ using ClaudeApi.Agents.Tools;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace ClaudeApi.Agents
 {
@@ -71,20 +72,20 @@ namespace ClaudeApi.Agents
                 var userMessage = new Message
                 {
                     Role = "user",
-                    Content = [ ContentBlock.FromString(userInput) ]
+                    Content = [ContentBlock.FromString(userInput)]
                 };
 
                 _messageHistory.AddMessage(userMessage);
 
                 var streamContentTask = _client.ProcessContinuousConversationAsync(
                     [.. _messageHistory.Messages],
-                    systemMessage: [ ContentBlock.FromString(SystemPrompt) ]);
+                    systemMessage: [ContentBlock.FromString(SystemPrompt)]);
 
                 var userInputContentBlock = ContentBlock.FromString();
                 var assistantMessage = new Message
                 {
                     Role = "assistant",
-                    Content = [ userInputContentBlock ]
+                    Content = [userInputContentBlock]
                 };
                 _messageHistory.AddMessage(assistantMessage);
 
@@ -94,6 +95,22 @@ namespace ClaudeApi.Agents
                     await Task.Delay(50);
                 }
             }
+        }
+
+        // Methods to expose DiscoverTools functionality
+        public void DiscoverTools(Assembly toolAssembly)
+        {
+            _client.DiscoverTools(toolAssembly);
+        }
+
+        public void DiscoverTools(Type type)
+        {
+            _client.DiscoverTools(type);
+        }
+
+        public void DiscoverTool(Type type, string methodName)
+        {
+            _client.DiscoverTool(type, methodName);
         }
     }
 }

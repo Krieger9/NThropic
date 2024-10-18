@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClaudeApi.Agents\ClaudeApi.Agents.csproj" />
+    <ProjectReference Include="..\ClaudeApi\ClaudeApi.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Prompts\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Prompts\WriteUnitTests.scriban">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

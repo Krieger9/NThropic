@@ -5,6 +5,8 @@ using ClaudeApi.DependencyInjection;
 using ClaudeApi.Messages;
 using ClaudeApi.Services;
 using ClaudeApi.Tools;
+using CodeAgents.Tools;
+using CodeAgents.UnitTests;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
@@ -64,6 +66,8 @@ namespace WinUI3Host
             services.AddTransient<IUsageStatsViewModel, UsageStatsViewModel>();
             services.AddTransient<IFilesListViewModel, FilesListViewModel>();
             services.AddTransient<Usage>();
+            services.AddTransient<UnitTestRequirementsAnalyzerAgent>();
+            services.AddTransient<UnitTestRequirementsAnalyzerTool>();
 
             return services.BuildServiceProvider();
         }
@@ -76,6 +80,7 @@ namespace WinUI3Host
                 mainWindow.Activate();
 
                 var orchestrationAgent = Services.GetRequiredService<ObservableOrchestrationAgent>();
+                orchestrationAgent.DiscoverTool(typeof(UnitTestRequirementsAnalyzerTool), "AnalyzeUnitTestRequirementsAsync");
                 await orchestrationAgent.StartConversationAsync();
             }
             catch (Exception ex)
