@@ -9,7 +9,7 @@ using ClaudeApi.Agents.Tools;
 
 namespace ClaudeApi.Agents
 {
-    public partial class OrchestrationAgent(ClaudeClient client, IUserInterface userInterface)
+    public partial class ChatOrchestrator(ClaudeClient client, IUserInterface userInterface)
     {
         private readonly MessageHistory _messageHistory = new ();
 

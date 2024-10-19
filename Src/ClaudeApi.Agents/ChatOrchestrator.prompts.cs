@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ClaudeApi.Agents
 {
-    public partial class ObservableOrchestrationAgent
+    public partial class ChatOrchestrator 
     {
 
         public string SystemPrompt { get; set; } = """

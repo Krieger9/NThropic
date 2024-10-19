@@ -50,7 +50,7 @@ namespace WinUI3Host
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<IReactiveUserInterface>(serviceProvider => serviceProvider.GetRequiredService<MainViewModel>());
             services.AddTransient<MainWindow>();
-            services.AddTransient<ObservableOrchestrationAgent>();
+            services.AddTransient<ObservableChatOrchestrator>();
             services.AddTransient<IToolRegistry, ToolRegistry>();
             services.AddTransient<IPromptService, PromptService>();
             services.AddTransient<ISandboxFileManager, SandboxFileManager>();
@@ -75,7 +75,7 @@ namespace WinUI3Host
                 var mainWindow = Services.GetRequiredService<MainWindow>();
                 mainWindow.Activate();
 
-                var orchestrationAgent = Services.GetRequiredService<ObservableOrchestrationAgent>();
+                var orchestrationAgent = Services.GetRequiredService<ObservableChatOrchestrator>();
                 await orchestrationAgent.StartConversationAsync();
             }
             catch (Exception ex)

@@ -12,7 +12,7 @@ using System.ComponentModel;
 
 namespace ClaudeApi.Agents
 {
-    public partial class ObservableOrchestrationAgent
+    public partial class ObservableChatOrchestrator
     {
         private readonly ObservableMessageHistory _messageHistory = new();
 
@@ -21,7 +21,7 @@ namespace ClaudeApi.Agents
         private readonly ClaudeClient _client;
         private readonly IReactiveUserInterface _userInterface;
 
-        public ObservableOrchestrationAgent(ClaudeClient client, IReactiveUserInterface userInterface)
+        public ObservableChatOrchestrator(ClaudeClient client, IReactiveUserInterface userInterface)
         {
             _client = client;
             _userInterface = userInterface;

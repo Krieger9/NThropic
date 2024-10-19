@@ -26,7 +26,7 @@ class Program
         serviceCollection.AddSingleton<IServiceProvider>(serviceProvider);
 
         // Get the ChatBot instance from the service provider
-        var chatBot = serviceProvider.GetRequiredService<OrchestrationAgent>();
+        var chatBot = serviceProvider.GetRequiredService<ChatOrchestrator>();
 
         // Start the conversation
         await chatBot.StartConversationAsync();
@@ -51,7 +51,7 @@ class Program
         services.AddHttpClient<IClaudeApiService, ClaudeApiService>();
         services.AddSingleton<ISandboxFileManager, SandboxFileManager>();
         services.AddSingleton<IUserInterface, ConsoleUserInterface>();
-        services.AddSingleton<OrchestrationAgent>();
+        services.AddSingleton<ChatOrchestrator>();
         services.AddTransient<IToolRegistry, ToolRegistry>();
         services.AddTransient<IPromptService, PromptService>();
         services.AddClaudApi();
