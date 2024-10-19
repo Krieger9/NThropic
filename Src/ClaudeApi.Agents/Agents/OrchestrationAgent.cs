@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ClaudeApi.Agents.Agents
 {
-    public class OrchestrationAgent : Agent
+    public partial class OrchestrationAgent : Agent
     {
         public async Task<string> ExecuteAsync(string input, WorkItem work_item)
         {

@@ -16,8 +16,11 @@ namespace ClaudeApi.Agents.DependencyInjection
     [Description("Represents a work item with a goal and steps to achieve it.")]
     public class WorkItem : INotifyPropertyChanged
     {
-        private string _goal = "Complete the assignment.";
-        private string _assignment = "No assignment yet. Provide any additional input on the topic so far, if any or be social.";
+        public static readonly string EmptyAssignment = "No assignment yet. Provide any additional input on the topic so far, if any or be social.";
+        private static readonly string _defaultGoal = "Complete the assignment.";
+
+        private string _goal = _defaultGoal;
+        private string _assignment = EmptyAssignment;
 
         private readonly BehaviorSubject<List<string>> _stepsSubject = new(new List<string>());
 
