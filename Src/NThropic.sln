@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sanctuary", "Sanctuary\Sanc
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "WinUI3Host (Package)", "WinUI3Host\WinUI3Host (Package)\WinUI3Host (Package).wapproj", "{B17441AE-962F-4B2F-B533-2654AE6E5CF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinUI3Host", "WinUI3Host\WinUI3Host\WinUI3Host.csproj", "{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinUI3Host", "WinUI3Host\WinUI3Host\WinUI3Host.csproj", "{A4BB9ECF-CBCD-4ED0-BE27-55D261EF8442}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
