@@ -15,6 +15,7 @@ NThropic is a .NET library for accessing Anthropic's Claude API. It's currently 
 ## Upcoming Features
 - Cache two sets of 'Messages'
 - Sub-agents for specialized tasks
+- Complex query management and fluid conversation design.
 
 ## Project Structure
 - `ClaudeApi`: Core project for API interaction
