@@ -27,5 +27,14 @@
             <Button Content="Send" Grid.Column="1" Margin="10,0,0,0" 
                     Command="{x:Bind ChatData.SendMessageCommand}"/>
         </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <TextBlock Text="Upload: " />
+            <ProgressRing x:Name="UploadProgressRing" Width="20" Height="20" IsActive="{x:Bind ChatData.IsUploadInProgress, Mode=OneWay}" />
+            <TextBlock Text="Download: " Margin="10,0,0,0" />
+            <ProgressRing x:Name="DownloadProgressRing" Width="20" Height="20" IsActive="{x:Bind ChatData.IsDownloadInProgress, Mode=OneWay}" />
+            <TextBlock Text="Completed: " Margin="10,0,0,0" />
+            <ProgressRing x:Name="CompletedProgressRing" Width="20" Height="20" IsActive="{x:Bind ChatData.IsRequestCompleted, Mode=OneWay}" />
+        </StackPanel>
     </Grid>
 </UserControl>

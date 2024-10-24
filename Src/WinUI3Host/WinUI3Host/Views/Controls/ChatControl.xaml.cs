@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using WinUI3Host.ViewModels;
 using Windows.UI.Core;
+using ClaudeApi;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -26,6 +27,14 @@ namespace WinUI3Host.Views.Controls
         public ChatControl()
         {
             this.InitializeComponent();
+            var claudeClient = (Application.Current as App)?.Services.GetRequiredService<ClaudeClient>();
+            if (claudeClient != null)
+            {
+                claudeClient.OnRequestUploadStarted += () => ChatData.IsUploadInProgress = true;
+                claudeClient.OnRequestUploadCompleted += () => ChatData.IsUploadInProgress = false;
+                claudeClient.OnRequestDownloadStarted += () => ChatData.IsDownloadInProgress = true;
+                claudeClient.OnRequestDownloadCompleted += () => ChatData.IsDownloadInProgress = false;
+            }
         }
 
         private void TextBox_KeyDown(object sender, KeyRoutedEventArgs e)

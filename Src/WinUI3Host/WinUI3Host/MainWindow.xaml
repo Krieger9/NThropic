@@ -28,5 +28,14 @@
             <controls:UsageStatsControl DataContext="{x:Bind ViewModel.TotalUsageStats}" />
             <controls:FilesList DataContext="{x:Bind ViewModel.FilesListViewModel}" Margin="0,10,0,0"/>
         </StackPanel>
+
+        <StackPanel Grid.Column="0" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+            <TextBlock Text="Upload: " />
+            <ProgressRing x:Name="UploadProgressRing" Width="20" Height="20" IsActive="{x:Bind ViewModel.IsUploadInProgress, Mode=OneWay}" />
+            <TextBlock Text="Download: " Margin="10,0,0,0" />
+            <ProgressRing x:Name="DownloadProgressRing" Width="20" Height="20" IsActive="{x:Bind ViewModel.IsDownloadInProgress, Mode=OneWay}" />
+            <TextBlock Text="Completed: " Margin="10,0,0,0" />
+            <ProgressRing x:Name="CompletedProgressRing" Width="20" Height="20" IsActive="{x:Bind ViewModel.IsRequestCompleted, Mode=OneWay}" />
+        </StackPanel>
     </Grid>
 </Window>
