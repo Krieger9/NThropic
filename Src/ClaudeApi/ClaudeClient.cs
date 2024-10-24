@@ -30,6 +30,11 @@ namespace ClaudeApi
         private readonly Subject<List<string>> _contextFilesSubject = new();
         public IObservable<List<string>> ContextFilesStream => _contextFilesSubject.AsObservable();
 
+        public event Action? OnRequestUploadStarted;
+        public event Action? OnRequestUploadCompleted;
+        public event Action? OnRequestDownloadStarted;
+        public event Action? OnRequestDownloadCompleted;
+
         public ClaudeClient(ISandboxFileManager sandboxFileManager, 
             IToolManagementService toolManagementService, 
             IClaudeApiService claudeApiService, 
@@ -143,6 +148,7 @@ namespace ClaudeApi
         {
             try
             {
+                OnRequestUploadStarted?.Invoke();
                 while (true)
                 {
                     var apiCall = CreateMessageStreamAsyncInternal(messages, systemMessage, model, maxTokens, temperature);
@@ -179,12 +185,15 @@ namespace ClaudeApi
 
                     var response = await apiCall;
                     response.EnsureSuccessStatusCode();
+                    OnRequestUploadCompleted?.Invoke();
+                    OnRequestDownloadStarted?.Invoke();
                     var stream = await response.Content.ReadAsStreamAsync();
 
                     await foreach (var message in sseProcessor.ProcessStreamAsync(stream))
                     {
                         await writer.WriteAsync(message);
                     }
+                    OnRequestDownloadCompleted?.Invoke();
 
                     if (toolCompletionQueue.Count > 0)
                     {
