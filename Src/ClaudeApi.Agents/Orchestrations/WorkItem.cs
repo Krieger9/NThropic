@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ClaudeApi.Agents.DependencyInjection
+namespace ClaudeApi.Agents.Orchestrations
 {
     [JsonSchema("WorkItem")]
     [Description("Represents a work item with a goal and steps to achieve it.")]

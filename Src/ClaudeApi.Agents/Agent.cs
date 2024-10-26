@@ -18,13 +18,13 @@ namespace ClaudeApi.Agents
                 var parameters = method.GetParameters();
                 if (parameters.Length > 0 && parameters[0].ParameterType == typeof(string))
                 {
-                    var args = new object[parameters.Length];
+                    var args = new object?[parameters.Length];
                     args[0] = input;
 
                     for (int i = 1; i < parameters.Length; i++)
                     {
                         var param = parameters[i];
-                        if (arguments.TryGetValue(param.Name, out var value))
+                        if (arguments.TryGetValue(param.Name!, out var value))
                         {
                             if (value == null && param.ParameterType.IsValueType && Nullable.GetUnderlyingType(param.ParameterType) == null)
                             {

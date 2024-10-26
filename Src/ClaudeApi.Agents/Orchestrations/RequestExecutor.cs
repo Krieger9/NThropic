@@ -1,0 +1,159 @@
+﻿using ClaudeApi.Agents.Agents;
+using ClaudeApi.Agents.Agents.Converters;
+using ClaudeApi.Prompts;
+using ClaudeApi.Services;
+using Microsoft.Extensions.Configuration;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+
+namespace ClaudeApi.Agents.Orchestrations
+{
+
+    public class RequestExecutor : IRequestExecutor
+    {
+        private readonly IConfiguration _configuration;
+        private static CHALLENGE_LEVEL _defaultChallengeLevel = CHALLENGE_LEVEL.PROFESSIONAL;
+
+        private readonly ObservableCollection<List<ExecutableResponse>> _executables = [];
+        private readonly IConverterAgent _converterAgent;
+        private readonly IChallengeLevelAssesementAgent _challengeLevelAssesementAgent;
+        private readonly ISmartClient _client;
+        private readonly IPromptService _promptService;
+
+        public string Contents { get { return GenerateContentsString(); } }
+        public IConverterAgent ConverterAgent { get { return _converterAgent; } }
+        public IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get { return _challengeLevelAssesementAgent; } }
+        public ISmartClient Client { get { return _client; } }
+        public IPromptService PromptService { get; }
+
+        private string GenerateContentsString()
+        {
+            throw new NotImplementedException();
+        }
+
+        public RequestExecutor(IConfiguration configuration,
+            IConverterAgent genericConverterAgent,
+            IChallengeLevelAssesementAgent challengeLevelAssesementAgent,
+            ISmartClient client,
+            IPromptService promptService)
+        {
+            _configuration = configuration;
+            _challengeLevelAssesementAgent = challengeLevelAssesementAgent;
+            _client = client;
+            _converterAgent = genericConverterAgent;
+            _promptService = promptService;
+
+            var defaultChallengeLevel = _configuration.GetValue<string>("DefaultChallengeLevel");
+            if (!string.IsNullOrEmpty(defaultChallengeLevel))
+            {
+                _defaultChallengeLevel = Enum.Parse<CHALLENGE_LEVEL>(defaultChallengeLevel);
+            }
+        }
+
+        public IRequestExecutor Ask(string ask)
+        {
+            return Ask([ask]);
+        }
+
+        public IRequestExecutor Ask(List<string> asks)
+        {
+            return Ask(asks, _defaultChallengeLevel);
+        }
+
+        public IRequestExecutor Ask(List<string> prompts, CHALLENGE_LEVEL challengeLevel = CHALLENGE_LEVEL.NONE)
+        {
+            if (challengeLevel == CHALLENGE_LEVEL.NONE)
+            {
+                challengeLevel = _defaultChallengeLevel;
+            }
+            var asks = prompts.Select(s => new ExecutableResponse(new Ask { Prompt = s, ChallengeLevel = challengeLevel }));
+            if (_executables.Count > 0)
+            {
+                _executables.Last().AddRange(asks);
+            }
+            else
+            {
+                _executables.Add(asks.ToList());
+            }
+            return this;
+        }
+
+        public IRequestExecutor ThenAsk(string ask)
+        {
+            return ThenAsk([ask]);
+        }
+
+        public IRequestExecutor ThenAsk(List<string> asks)
+        {
+            _executables.Add(asks.Select(s => new ExecutableResponse(new Ask { Prompt = s, ChallengeLevel = _defaultChallengeLevel })).ToList());
+            return this;
+        }
+
+        public IRequestExecutor Ask(Prompt prompt)
+        {
+            return Ask([prompt]);
+        }
+
+        public IRequestExecutor Ask(List<Prompt> prompts)
+        {
+            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { AdditionalPrompt = p, ChallengeLevel = _defaultChallengeLevel })).ToList());
+            return this;
+        }
+
+        public IRequestExecutor ThenAsk(Prompt prompt)
+        {
+            _executables.Add([new ExecutableResponse(new PromptAsk { AdditionalPrompt = prompt, ChallengeLevel = _defaultChallengeLevel })]);
+            return this;
+        }
+
+        public IRequestExecutor ThenAsk(List<Prompt> prompts)
+        {
+            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { AdditionalPrompt = p, ChallengeLevel = _defaultChallengeLevel })).ToList());
+            return this;
+        }
+
+        public IRequestExecutor ProcessByAgent(IAgent agent)
+        {
+            _executables.Add([new ExecutableResponse(new AgentExecutable { Agent = agent })]);
+            return this;
+        }
+
+        public IRequestExecutor ConvertTo<T>()
+        {
+            _executables.Add([new ExecutableResponse(new ConvertTo<T>())]);
+            return this;
+        }
+
+        public async Task<string> Execute()
+        {
+            var reportBuilder = new StringBuilder();
+            int setCounter = 1;
+
+            foreach (var executableList in _executables)
+            {
+                reportBuilder.AppendLine($"Set {setCounter}:");
+
+                var tasks = executableList.Select(async executableResponse =>
+                {
+                    var response = await executableResponse.Executable.ExecuteAsync(this);
+                    executableResponse.Response = response;
+                    return executableResponse;
+                }).ToList();
+
+                var responses = await Task.WhenAll(tasks);
+
+                foreach (var executableResponse in responses)
+                {
+                    reportBuilder.AppendLine($"  Question: {((Ask)executableResponse.Executable).Prompt}");
+                    reportBuilder.AppendLine($"  Answer: {executableResponse.Response}");
+                    reportBuilder.AppendLine();
+                }
+
+                setCounter++;
+            }
+
+            return reportBuilder.ToString();
+        }
+    }
+}

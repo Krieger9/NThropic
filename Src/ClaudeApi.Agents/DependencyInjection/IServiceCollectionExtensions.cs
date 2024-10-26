@@ -1,11 +1,8 @@
 ﻿using ClaudeApi.Agents.Agents;
+using ClaudeApi.Agents.Agents.Converters;
+using ClaudeApi.Agents.Orchestrations;
 using ClaudeApi.Agents.Tools;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ClaudeApi.Agents.DependencyInjection
 {
@@ -18,6 +15,9 @@ namespace ClaudeApi.Agents.DependencyInjection
             services.AddTransient<SummarizeTools>();
             services.AddTransient<PromptCacheTools>();
             services.AddTransient<DiskTools>();
+            services.AddTransient<IConverterAgent, GenericConverterAgent>();
+            services.AddTransient<IChallengeLevelAssesementAgent, ChallengeLevelAssesementAgent>();
+            services.AddTransient<ISmartClient, SmartClient>();
             return services;
         }
     }

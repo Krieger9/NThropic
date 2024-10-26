@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Orchestrations\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
 </Project>

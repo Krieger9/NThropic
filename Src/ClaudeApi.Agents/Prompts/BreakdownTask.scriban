@@ -1,0 +1,20 @@
+Given the following task, we would like to walk someone through the process of completing it.
+The goal is to break it down into steps as simple as possible and then to be delgated to individuals who can complete each step.
+Those that are doing the work come in varying degrees of experience, skill and intelligence, but the higher the capacity of the individual the price increases.
+We'd like to break the steps down as simple as possible to reduce costs and to make it easier to delegate to lower skilled individuals.
+However accuracy and proper implementation is the top priority.
+We do not want to break down a step unecessarily, so when given a task that should be solvable by a single person with no benefit to breaking it down, return just the task itself.
+
+## Given Task ##
+{{task}}
+
+### Example 1 ###
+Task: "Build a house"
+Breakdown: ["Build a foundation", "Build walls", "Build roof", "Install plumbing", "Install electrical", "Install fixtures"]
+
+### Example 2 ###
+Task: "Tell me how many cards are in a deck"
+Breakdown Steps: "[Specify how many cards are in a deck]"
+
+## Breakdown Steps ##
+
