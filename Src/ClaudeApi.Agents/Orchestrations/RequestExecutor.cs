@@ -20,6 +20,7 @@ namespace ClaudeApi.Agents.Orchestrations
         private readonly IChallengeLevelAssesementAgent _challengeLevelAssesementAgent;
         private readonly ISmartClient _client;
         private readonly IPromptService _promptService;
+        private readonly IServiceProvider _serviceProvider;
 
         public string Contents { get { return GenerateContentsString(); } }
         public IConverterAgent ConverterAgent { get { return _converterAgent; } }
@@ -29,20 +30,22 @@ namespace ClaudeApi.Agents.Orchestrations
 
         private string GenerateContentsString()
         {
-            throw new NotImplementedException();
+            return GenerateReport();
         }
 
         public RequestExecutor(IConfiguration configuration,
             IConverterAgent genericConverterAgent,
             IChallengeLevelAssesementAgent challengeLevelAssesementAgent,
             ISmartClient client,
-            IPromptService promptService)
+            IPromptService promptService,
+            IServiceProvider serviceProvider)
         {
             _configuration = configuration;
             _challengeLevelAssesementAgent = challengeLevelAssesementAgent;
             _client = client;
             _converterAgent = genericConverterAgent;
             _promptService = promptService;
+            _serviceProvider = serviceProvider;
 
             var defaultChallengeLevel = _configuration.GetValue<string>("DefaultChallengeLevel");
             if (!string.IsNullOrEmpty(defaultChallengeLevel))
@@ -125,15 +128,10 @@ namespace ClaudeApi.Agents.Orchestrations
             return this;
         }
 
-        public async Task<string> Execute()
+        public async Task<IRequestExecutor> ExecuteAsync()
         {
-            var reportBuilder = new StringBuilder();
-            int setCounter = 1;
-
             foreach (var executableList in _executables)
             {
-                reportBuilder.AppendLine($"Set {setCounter}:");
-
                 var tasks = executableList.Select(async executableResponse =>
                 {
                     var response = await executableResponse.Executable.ExecuteAsync(this);
@@ -142,8 +140,34 @@ namespace ClaudeApi.Agents.Orchestrations
                 }).ToList();
 
                 var responses = await Task.WhenAll(tasks);
+            }
 
-                foreach (var executableResponse in responses)
+            return this;
+        }
+
+        public Task<T?> AsAsync<T>()
+        {
+            var item = _executables.Last().First().Response;
+            if(item is T)
+            {
+                return Task.FromResult<T?>((T)item);
+            }
+            else
+            {
+                return Task.FromResult(default(T));
+            }
+        }
+
+        public string GenerateReport()
+        {
+            var reportBuilder = new StringBuilder();
+            int setCounter = 1;
+
+            foreach (var executableList in _executables)
+            {
+                reportBuilder.AppendLine($"Set {setCounter}:");
+
+                foreach (var executableResponse in executableList)
                 {
                     reportBuilder.AppendLine($"  Question: {((Ask)executableResponse.Executable).Prompt}");
                     reportBuilder.AppendLine($"  Answer: {executableResponse.Response}");
@@ -155,5 +179,6 @@ namespace ClaudeApi.Agents.Orchestrations
 
             return reportBuilder.ToString();
         }
+
     }
 }

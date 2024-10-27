@@ -12,13 +12,16 @@ namespace ClaudeApi.Agents.Agents
     {
         public async Task<string> ExecuteAsync(string input, WorkItem work_item)
         {
-            var plan = executor.Ask(new Prompt("ChallengeLevelAssesement"))
+            var plan = executor
+                .Ask(new Prompt("ChallengeLevelAssesement"))
                 .Ask(new Prompt("BreakdownTask")
                 {
                     Arguments = new Dictionary<string, object>{{"task", input}}
                 });
 
-            return await plan.Execute();
+            var run = await plan.ExecuteAsync();
+            var result = await run.AsAsync<string>();
+            return result ?? "No response received.";
         }
     }
 }

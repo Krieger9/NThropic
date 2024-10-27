@@ -33,6 +33,19 @@ namespace ClaudeApi.Agents.Agents.Converters
 
         public async Task<object?> ConvertToAsync(string input, Type desiredType)
         {
+            // Check if the desired type is an enum
+            if (desiredType.IsEnum)
+            {
+                try
+                {
+                    return Enum.Parse(desiredType, input, ignoreCase: true);
+                }
+                catch (Exception)
+                {
+                    // Ignore exceptions and proceed to use the prompt
+                }
+            }
+
             // Check if input is JSON and matches the desired type
             try
             {
@@ -56,10 +69,10 @@ namespace ClaudeApi.Agents.Agents.Converters
             var prompt = new Prompt("GenericConverter")
             {
                 Arguments = new Dictionary<string, object>
-                    {
-                        { "input", input },
-                        { "schema", JsonSchema.FromType(desiredType).ToJson() }
-                    }
+                        {
+                            { "input", input },
+                            { "schema", JsonSchema.FromType(desiredType).ToJson() }
+                        }
             };
 
             var history = new List<Message>();

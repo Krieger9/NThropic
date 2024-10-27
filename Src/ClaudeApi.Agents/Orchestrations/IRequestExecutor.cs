@@ -16,12 +16,13 @@ namespace ClaudeApi.Agents.Orchestrations
         IRequestExecutor Ask(List<string> asks);
         IRequestExecutor ThenAsk(string ask);
         IRequestExecutor ThenAsk(List<string> asks);
-        IRequestExecutor Ask(Prompt prompt); // New method
-        IRequestExecutor Ask(List<Prompt> prompts); // New method
-        IRequestExecutor ThenAsk(Prompt prompt); // New method
-        IRequestExecutor ThenAsk(List<Prompt> prompts); // New method
+        IRequestExecutor Ask(Prompt prompt);
+        IRequestExecutor Ask(List<Prompt> prompts);
+        IRequestExecutor ThenAsk(Prompt prompt);
+        IRequestExecutor ThenAsk(List<Prompt> prompts);
         IRequestExecutor ConvertTo<T>();
         IRequestExecutor ProcessByAgent(IAgent agent);
-        Task<string> Execute();
+        Task<IRequestExecutor> ExecuteAsync();
+        Task<T?> AsAsync<T>();
     }
 }
