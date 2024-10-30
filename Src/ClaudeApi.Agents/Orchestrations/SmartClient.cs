@@ -15,15 +15,15 @@ namespace ClaudeApi.Agents.Orchestrations
         {
             _client = client;
             _challengeLevelSettings = new Dictionary<CHALLENGE_LEVEL, (string model, int maxTokens, double temperature)>
-                {
-                    { CHALLENGE_LEVEL.AUTO, ("auto-model", 1024, 1.0) },
-                    { CHALLENGE_LEVEL.NONE, ("none-model", 512, 0.5) },
-                    { CHALLENGE_LEVEL.ELEMENTARY, ("elementary-model", 256, 0.7) },
-                    { CHALLENGE_LEVEL.INTERMEDIATE, ("intermediate-model", 512, 0.8) },
-                    { CHALLENGE_LEVEL.PROFESSIONAL, ("professional-model", 1024, 0.9) },
-                    { CHALLENGE_LEVEL.EXPERT, ("expert-model", 2048, 1.0) },
-                    { CHALLENGE_LEVEL.LEADING_EXPERT, ("leading-expert-model", 4096, 1.2) }
-                };
+                    {
+                        { CHALLENGE_LEVEL.AUTO, ("auto-model", 4096, 0.0) },
+                        { CHALLENGE_LEVEL.NONE, ("none-model", 512, 0.0) },
+                        { CHALLENGE_LEVEL.ELEMENTARY, ("claude-3-haiku-20240307", 1024, 0.0) },
+                        { CHALLENGE_LEVEL.INTERMEDIATE, ("claude-3-haiku-20240307", 2048, 0.0) },
+                        { CHALLENGE_LEVEL.PROFESSIONAL, ("claude-3-5-sonnet-20241022", 4096, 0.0) },
+                        { CHALLENGE_LEVEL.EXPERT, ("claude-3-5-sonnet-20241022", 4096, 0.0) },
+                        { CHALLENGE_LEVEL.LEADING_EXPERT, ("claude-3-5-sonnet-20241022", 4096, 0.0) }
+                    };
         }
 
         private (string model, int maxTokens, double temperature) GetSettings(CHALLENGE_LEVEL challengeLevel)
@@ -71,6 +71,48 @@ namespace ClaudeApi.Agents.Orchestrations
         {
             var (model, maxTokens, temperature) = GetSettings(challengeLevel);
             return await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage, model, maxTokens, temperature);
+        }
+
+        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
+            List<Message> initialMessages,
+            CHALLENGE_LEVEL challengeLevel,
+            string model,
+            int maxTokens,
+            double temperature)
+        {
+            return _client.ProcessContinuousConversationAsync(initialMessages, null, model, maxTokens, temperature);
+        }
+
+        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
+            string userInput,
+            List<Message> history,
+            CHALLENGE_LEVEL challengeLevel,
+            string model,
+            int maxTokens,
+            double temperature)
+        {
+            return _client.ProcessContinuousConversationAsync(userInput, history, null, model, maxTokens, temperature);
+        }
+
+        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
+            string userInput,
+            CHALLENGE_LEVEL challengeLevel,
+            string model,
+            int maxTokens,
+            double temperature)
+        {
+            return _client.ProcessContinuousConversationAsync(userInput, null, model, maxTokens, temperature);
+        }
+
+        public async Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
+            Prompt prompt,
+            List<Message> history,
+            CHALLENGE_LEVEL challengeLevel,
+            string model,
+            int maxTokens,
+            double temperature)
+        {
+            return await _client.ProcessContinuousConversationAsync(prompt, history, null, model, maxTokens, temperature);
         }
 
         public void AddContextFile(string filePath) => _client.AddContextFile(filePath);

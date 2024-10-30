@@ -13,7 +13,7 @@ using System.Threading.Channels;
 
 namespace ClaudeApi
 {
-    public partial class ClaudeClient
+    public partial class ClaudeClient : IClient
     {
         private readonly JObject _ephemeralCacheControl = JObject.Parse("{\"type\": \"ephemeral\"}");
         private readonly ILogger<ClaudeClient> _logger;

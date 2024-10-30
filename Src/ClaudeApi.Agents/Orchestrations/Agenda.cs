@@ -1,4 +1,5 @@
-﻿using ClaudeApi.Prompts;
+﻿using ClaudeApi.Messages;
+using ClaudeApi.Prompts;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
@@ -33,6 +34,7 @@ namespace ClaudeApi.Agents.Orchestrations
     {
         public CHALLENGE_LEVEL ChallengeLevel { get; set; }
         public string? Prompt { get; set; }
+
         public virtual async Task<string> ExecuteAsync(IRequestExecutor requestExtractor)
         {
             if(string.IsNullOrWhiteSpace(Prompt))
@@ -43,24 +45,20 @@ namespace ClaudeApi.Agents.Orchestrations
         }
     }
 
-    public class PromptAsk : Ask
+    public class PromptAsk : IExecute
     {
-        public Prompt? AdditionalPrompt { get; set; }
+        public Prompt? Prompt { get; set; }
+        public CHALLENGE_LEVEL ChallengeLevel { get; set; }
 
-        public override async Task<string> ExecuteAsync(IRequestExecutor requestExecutor)
+        public async Task<string> ExecuteAsync(IRequestExecutor requestExecutor)
         {
-            if (AdditionalPrompt == null)
+            if (Prompt == null)
             {
                 throw new Exception($"AdditionalPrompt is not set in {nameof(PromptAsk)}");
             }
 
-            if (string.IsNullOrWhiteSpace(Prompt))
-            {
-                var message = await requestExecutor.PromptService.ParsePromptAsync(AdditionalPrompt);
-                Prompt = message.Content?.FirstOrDefault()?.ToString();
-            }
-
-            return await base.ExecuteAsync(requestExecutor);
+            var result = await requestExecutor.Client.ProcessContinuousConversationAsync(Prompt, [], ChallengeLevel);
+            return await result.ToSingleStringAsync();
         }
     }
 

@@ -1,3 +1,4 @@
+using ClaudeApi.Agents.Extensions;
 using ClaudeApi.Agents.Orchestrations;
 using ClaudeApi.Prompts;
 using System;
@@ -11,6 +12,8 @@ public class FileAnalyzer(IRequestExecutor executor) : IFileAnalyzer
         [Description("File Types Enum")]
         public enum FileTypes
         {
+            [Description("An empty file")]
+            Empty,
             [Description("Text file")]
             Text,
             [Description("Code file")]
@@ -31,8 +34,12 @@ public class FileAnalyzer(IRequestExecutor executor) : IFileAnalyzer
                     .Ask(new Prompt("GetFileType")
                     {
                         Name = "GetFileType",
-                        Arguments = new Dictionary<string, object> { { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() } }
+                        Arguments = new Dictionary<string, object> { 
+                            { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
+                            { "possible_types", default(FileTypes).GetEnumDescription() }
+                        }
                     })
+                    .ConvertTo<FileTypes>()
                     .ExecuteAsync();
                 var file_type = await run.AsAsync<FileTypes>();
 

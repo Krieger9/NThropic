@@ -2,31 +2,21 @@
 using ClaudeApi.Prompts;
 using Newtonsoft.Json;
 using NJsonSchema;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ClaudeApi.Agents.Agents.Converters
 {
     public class GenericConverterAgent : Agent, IConverterAgent
     {
-        private readonly ClaudeClient _client;
+        private readonly IClient _client;
 
-        public GenericConverterAgent(ClaudeClient client)
+        public GenericConverterAgent(IClient client)
         {
             _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
         public override async Task<string> ExecuteAsync(string input, Dictionary<string, object> arguments)
         {
-            var desiredType = arguments["desiredType"] as Type;
-            if (desiredType == null)
-            {
-                throw new ArgumentException("desiredType argument is required and must be a Type.", nameof(arguments));
-            }
-
+            var desiredType = arguments["desiredType"] as Type ?? throw new ArgumentException("desiredType argument is required and must be a Type.", nameof(arguments));
             var objectResult = await ConvertToAsync(input, desiredType);
             return objectResult?.ToString() ?? string.Empty;
         }
@@ -51,7 +41,7 @@ namespace ClaudeApi.Agents.Agents.Converters
             {
                 var schema = JsonSchema.FromType(desiredType);
                 var errors = schema.Validate(input);
-                if (!errors.Any())
+                if (errors.Count == 0)
                 {
                     var result = JsonConvert.DeserializeObject(input, desiredType);
                     if (result != null)
@@ -70,8 +60,8 @@ namespace ClaudeApi.Agents.Agents.Converters
             {
                 Arguments = new Dictionary<string, object>
                         {
-                            { "input", input },
-                            { "schema", JsonSchema.FromType(desiredType).ToJson() }
+                            { "context", input },
+                            { "json_schema", JsonSchema.FromType(desiredType).ToJson() }
                         }
             };
 

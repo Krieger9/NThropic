@@ -1,0 +1,8 @@
+Examine the given contents of a text file.
+Determine what kind of file it is from the listed possible file types.
+
+### File Contents ###
+{{file_contents}}
+
+### Possible File Types ###
+{{possible_types}}

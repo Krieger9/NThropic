@@ -9,7 +9,6 @@ using System.Text;
 
 namespace ClaudeApi.Agents.Orchestrations
 {
-
     public class RequestExecutor : IRequestExecutor
     {
         private readonly IConfiguration _configuration;
@@ -26,7 +25,8 @@ namespace ClaudeApi.Agents.Orchestrations
         public IConverterAgent ConverterAgent { get { return _converterAgent; } }
         public IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get { return _challengeLevelAssesementAgent; } }
         public ISmartClient Client { get { return _client; } }
-        public IPromptService PromptService { get; }
+        public IPromptService PromptService { get { return _promptService; } }
+        public IServiceProvider ServiceProvider { get { return _serviceProvider; } }
 
         private string GenerateContentsString()
         {
@@ -100,19 +100,19 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public IRequestExecutor Ask(List<Prompt> prompts)
         {
-            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { AdditionalPrompt = p, ChallengeLevel = _defaultChallengeLevel })).ToList());
+            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { Prompt = p, ChallengeLevel = _defaultChallengeLevel })).ToList());
             return this;
         }
 
         public IRequestExecutor ThenAsk(Prompt prompt)
         {
-            _executables.Add([new ExecutableResponse(new PromptAsk { AdditionalPrompt = prompt, ChallengeLevel = _defaultChallengeLevel })]);
+            _executables.Add([new ExecutableResponse(new PromptAsk { Prompt = prompt, ChallengeLevel = _defaultChallengeLevel })]);
             return this;
         }
 
         public IRequestExecutor ThenAsk(List<Prompt> prompts)
         {
-            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { AdditionalPrompt = p, ChallengeLevel = _defaultChallengeLevel })).ToList());
+            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { Prompt = p, ChallengeLevel = _defaultChallengeLevel })).ToList());
             return this;
         }
 
@@ -148,9 +148,9 @@ namespace ClaudeApi.Agents.Orchestrations
         public Task<T?> AsAsync<T>()
         {
             var item = _executables.Last().First().Response;
-            if(item is T)
+            if(item is T t)
             {
-                return Task.FromResult<T?>((T)item);
+                return Task.FromResult<T?>(t);
             }
             else
             {

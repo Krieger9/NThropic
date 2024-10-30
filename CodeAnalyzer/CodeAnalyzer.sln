@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClaudeApi.Agents", "..\Src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClaudeApi", "..\Src\ClaudeApi\ClaudeApi.csproj", "{9BF29251-9C96-4A27-9B34-08DBC664F4FC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sanctuary", "..\Src\Sanctuary\Sanctuary.csproj", "{C2011AD3-5E06-49D0-AAC4-E0BA792A83B3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{9BF29251-9C96-4A27-9B34-08DBC664F4FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9BF29251-9C96-4A27-9B34-08DBC664F4FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9BF29251-9C96-4A27-9B34-08DBC664F4FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2011AD3-5E06-49D0-AAC4-E0BA792A83B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2011AD3-5E06-49D0-AAC4-E0BA792A83B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2011AD3-5E06-49D0-AAC4-E0BA792A83B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2011AD3-5E06-49D0-AAC4-E0BA792A83B3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

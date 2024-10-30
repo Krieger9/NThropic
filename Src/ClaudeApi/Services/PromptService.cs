@@ -13,7 +13,6 @@ namespace ClaudeApi.Services
 
         public PromptService(IConfiguration configuration, ILogger<PromptService> logger)
         {
-
             _promptsFolder = configuration["PromptsFolder"] ?? "./Prompts";
             _logger = logger;
         }

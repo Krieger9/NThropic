@@ -1,4 +1,5 @@
 ﻿using ClaudeApi.Services;
+using ClaudeApi.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,10 @@ namespace ClaudeApi.DependencyInjection
             return services.AddSingleton<IClaudeApiService, ClaudeApiService>()
             .AddTransient<IToolManagementService, ToolManagementService>()
             .AddTransient<IToolExecutionService, ToolExecutionService>()
-            .AddTransient<IToolDiscoveryService, ToolDiscoveryService>();
+            .AddTransient<IToolDiscoveryService, ToolDiscoveryService>()
+            .AddTransient<IPromptService, PromptService>()
+            .AddTransient<IClient, ClaudeClient>()
+            .AddTransient<IToolRegistry, ToolRegistry>();
         }
     }
 }
