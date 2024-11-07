@@ -63,57 +63,58 @@ namespace ClaudeApi.Agents.Orchestrations
             return _client.ProcessContinuousConversationAsync(userInput, systemMessage, model, maxTokens, temperature);
         }
 
-        public async Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
+        public async Task<(string, string)> ProcessContinuousConversationAsync(
             Prompt prompt,
             List<Message> history,
             CHALLENGE_LEVEL challengeLevel,
             List<ContentBlock>? systemMessage = null)
         {
             var (model, maxTokens, temperature) = GetSettings(challengeLevel);
-            return await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage, model, maxTokens, temperature);
+            var result = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage, model, maxTokens, temperature);
+            return result; 
         }
 
-        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
-            List<Message> initialMessages,
-            CHALLENGE_LEVEL challengeLevel,
-            string model,
-            int maxTokens,
-            double temperature)
-        {
-            return _client.ProcessContinuousConversationAsync(initialMessages, null, model, maxTokens, temperature);
-        }
-
-        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
-            string userInput,
-            List<Message> history,
-            CHALLENGE_LEVEL challengeLevel,
-            string model,
-            int maxTokens,
-            double temperature)
-        {
-            return _client.ProcessContinuousConversationAsync(userInput, history, null, model, maxTokens, temperature);
-        }
-
-        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
-            string userInput,
-            CHALLENGE_LEVEL challengeLevel,
-            string model,
-            int maxTokens,
-            double temperature)
-        {
-            return _client.ProcessContinuousConversationAsync(userInput, null, model, maxTokens, temperature);
-        }
-
-        public async Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
-            Prompt prompt,
-            List<Message> history,
-            CHALLENGE_LEVEL challengeLevel,
-            string model,
-            int maxTokens,
-            double temperature)
-        {
-            return await _client.ProcessContinuousConversationAsync(prompt, history, null, model, maxTokens, temperature);
-        }
+//        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
+//            List<Message> initialMessages,
+//            CHALLENGE_LEVEL challengeLevel,
+//            string model,
+//            int maxTokens,
+//            double temperature)
+//        {
+//            return _client.ProcessContinuousConversationAsync(initialMessages, null, model, maxTokens, temperature);
+//        }
+//
+//        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
+//            string userInput,
+//            List<Message> history,
+//            CHALLENGE_LEVEL challengeLevel,
+//            string model,
+//            int maxTokens,
+//            double temperature)
+//        {
+//            return _client.ProcessContinuousConversationAsync(userInput, history, null, model, maxTokens, temperature);
+//        }
+//
+//        public IAsyncEnumerable<string> ProcessContinuousConversationAsync(
+//            string userInput,
+//            CHALLENGE_LEVEL challengeLevel,
+//            string model,
+//            int maxTokens,
+//            double temperature)
+//        {
+//            return _client.ProcessContinuousConversationAsync(userInput, null, model, maxTokens, temperature);
+//        }
+//
+//        public async Task<(IAsyncEnumerable<string>, string)> ProcessContinuousConversationAsync(
+//            Prompt prompt,
+//            List<Message> history,
+//            CHALLENGE_LEVEL challengeLevel,
+//            string model,
+//            int maxTokens,
+//            double temperature)
+//        {
+//            return await _client.ProcessContinuousConversationAsync(prompt, history, null, model, maxTokens, temperature);
+//        }
 
         public void AddContextFile(string filePath) => _client.AddContextFile(filePath);
         public IReadOnlyList<string> GetContextFiles() => _client.GetContextFiles();

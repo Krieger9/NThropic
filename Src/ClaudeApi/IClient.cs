@@ -18,7 +18,8 @@ namespace ClaudeApi
             List<ContentBlock>? systemMessage = null,
             string model = "claude-3-5-sonnet-20240620",
             int maxTokens = 1024,
-            double temperature = 1.0);
+            double temperature = 1.0,
+            string stop_sequence="");
 
         IAsyncEnumerable<string> ProcessContinuousConversationAsync(
             string userInput,
@@ -35,7 +36,7 @@ namespace ClaudeApi
             int maxTokens = 1024,
             double temperature = 1.0);
 
-        Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
+        Task<(string response, string resolvedPrompt)> ProcessContinuousConversationAsync(
             Prompt prompt,
             List<Message> history,
             List<ContentBlock>? systemMessage = null,

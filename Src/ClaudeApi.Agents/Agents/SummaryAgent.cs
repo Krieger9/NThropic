@@ -26,19 +26,9 @@ namespace ClaudeApi.Agents.Agents
 
             var history = new List<Message>();
             var systemMessage = new List<ContentBlock>();
-            var responses = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage);
+            var (response,_) = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage);
 
-            var resultBuilder = new StringBuilder();
-
-            await foreach (var response in responses)
-            {
-                if (response != null)
-                {
-                    resultBuilder.Append(response);
-                }
-            }
-
-            return resultBuilder.ToString();
+            return response;
         }
     }
 }

@@ -24,18 +24,10 @@ namespace ClaudeApi.Agents.Agents.Converters
         public async Task<object?> ConvertToAsync(string input, Type desiredType)
         {
             // Check if the desired type is an enum
-            if (desiredType.IsEnum)
+            if (Enum.TryParse(desiredType, input, ignoreCase: true, out var enumResult))
             {
-                try
-                {
-                    return Enum.Parse(desiredType, input, ignoreCase: true);
-                }
-                catch (Exception)
-                {
-                    // Ignore exceptions and proceed to use the prompt
-                }
+                return enumResult;
             }
-
             // Check if input is JSON and matches the desired type
             try
             {
@@ -67,9 +59,20 @@ namespace ClaudeApi.Agents.Agents.Converters
 
             var history = new List<Message>();
             var systemMessage = new List<ContentBlock>();
-            var responses = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage);
+            var (response, _) = await _client.ProcessContinuousConversationAsync(prompt, history, systemMessage);
 
-            return JsonConvert.DeserializeObject(await responses.ToSingleStringAsync(), desiredType);
+            if (desiredType.IsEnum)
+            {
+                if (Enum.TryParse(desiredType, response, ignoreCase: true, out var enumResult2))
+                {
+                    return enumResult2;
+                }
+                throw new InvalidCastException($"Could not convert {response} to {desiredType.Name}");
+            }
+            else
+            {
+                return JsonConvert.DeserializeObject(response, desiredType);
+            }
         }
     }
 }

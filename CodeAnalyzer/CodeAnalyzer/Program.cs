@@ -62,6 +62,7 @@ static void ConfigureServices(IServiceCollection services)
     var configuration = new ConfigurationBuilder()
         .SetBasePath(Directory.GetCurrentDirectory())
         .AddJsonFile("Application.json", optional: false, reloadOnChange: true)
+        .AddUserSecrets<Program>() 
         .Build();
 
     // Register configuration

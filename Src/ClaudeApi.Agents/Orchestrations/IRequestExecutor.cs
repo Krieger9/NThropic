@@ -1,5 +1,6 @@
 using ClaudeApi.Agents.Agents;
 using ClaudeApi.Agents.Agents.Converters;
+using ClaudeApi.Agents.Contexts;
 using ClaudeApi.Prompts;
 using ClaudeApi.Services;
 
@@ -7,11 +8,13 @@ namespace ClaudeApi.Agents.Orchestrations
 {
     public interface IRequestExecutor
     {
+        string Contents { get; }
+
         IConverterAgent ConverterAgent { get; }
         IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get; }
         ISmartClient Client { get; }
         IPromptService PromptService { get; }
-        string Contents { get; }
+
         IRequestExecutor Ask(string ask);
         IRequestExecutor Ask(List<string> asks);
         IRequestExecutor ThenAsk(string ask);

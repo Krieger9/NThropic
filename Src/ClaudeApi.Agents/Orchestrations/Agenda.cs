@@ -21,33 +21,47 @@ namespace ClaudeApi.Agents.Orchestrations
         Task<string> ExecuteAsync(IRequestExecutor requestExtractor);
     }
 
-    public class ConvertTo<T> : IExecute
+    public interface IObjectValue
     {
+        Object? ObjectValue { get; }
+    }
+
+    public class ConvertTo<T> : IExecute, IObjectValue
+    {
+        public Object? ObjectValue { get; set; }
+
         public async Task<string> ExecuteAsync(IRequestExecutor requestExtractor)
         {
-            var result = await requestExtractor.ConverterAgent.ExecuteAsync(requestExtractor.Contents, []);
-            return JsonConvert.SerializeObject(result);
+            //var result = await requestExtractor.ConverterAgent.ExecuteAsync(requestExtractor.Contents, new Dictionary<string, object> { { "desiredType", typeof(T) } });
+            ObjectValue = await requestExtractor.ConverterAgent.ConvertToAsync(requestExtractor.Contents, typeof(T));
+            return JsonConvert.SerializeObject(ObjectValue);
         }
     }
 
-    public class Ask: IExecute
+    public class Ask : IExecute
     {
         public CHALLENGE_LEVEL ChallengeLevel { get; set; }
         public string? Prompt { get; set; }
 
         public virtual async Task<string> ExecuteAsync(IRequestExecutor requestExtractor)
         {
-            if(string.IsNullOrWhiteSpace(Prompt))
+            if (string.IsNullOrWhiteSpace(Prompt))
             {
                 throw new Exception($"Prompt is not set {nameof(Ask)}");
             }
             return await requestExtractor.Client.ProcessContinuousConversationAsync(Prompt, ChallengeLevel).ToSingleStringAsync();
+        }
+
+        public override string ToString()
+        {
+            return Prompt ?? "";
         }
     }
 
     public class PromptAsk : IExecute
     {
         public Prompt? Prompt { get; set; }
+        public string? ResolvedPrompt { get; set; }
         public CHALLENGE_LEVEL ChallengeLevel { get; set; }
 
         public async Task<string> ExecuteAsync(IRequestExecutor requestExecutor)
@@ -57,8 +71,14 @@ namespace ClaudeApi.Agents.Orchestrations
                 throw new Exception($"AdditionalPrompt is not set in {nameof(PromptAsk)}");
             }
 
-            var result = await requestExecutor.Client.ProcessContinuousConversationAsync(Prompt, [], ChallengeLevel);
-            return await result.ToSingleStringAsync();
+            var (result, resolvedPrompt) = await requestExecutor.Client.ProcessContinuousConversationAsync(Prompt, [], ChallengeLevel, null);
+            ResolvedPrompt = resolvedPrompt;
+            return result;
+        }
+
+        public override string ToString()
+        {
+            return $"{ResolvedPrompt}";
         }
     }
 
@@ -67,7 +87,7 @@ namespace ClaudeApi.Agents.Orchestrations
         public IAgent? Agent { get; set; }
         public async Task<string> ExecuteAsync(IRequestExecutor requestExtractor)
         {
-            if(Agent == null)
+            if (Agent == null)
             {
                 throw new Exception($"Agent is not set {nameof(AgentExecutable)}");
             }

@@ -26,7 +26,7 @@ namespace ClaudeApi.Agents.Orchestrations
             CHALLENGE_LEVEL challengeLevel,
             List<ContentBlock>? systemMessage = null);
 
-        Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
+        Task<(string result, string resolvedPrompt)> ProcessContinuousConversationAsync(
             Prompt prompt,
             List<Message> history,
             CHALLENGE_LEVEL challengeLevel,

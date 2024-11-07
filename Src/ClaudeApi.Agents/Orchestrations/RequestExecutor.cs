@@ -135,7 +135,14 @@ namespace ClaudeApi.Agents.Orchestrations
                 var tasks = executableList.Select(async executableResponse =>
                 {
                     var response = await executableResponse.Executable.ExecuteAsync(this);
-                    executableResponse.Response = response;
+                    if (executableResponse.Executable is IObjectValue objectValueItem)
+                    {
+                        executableResponse.Response = objectValueItem.ObjectValue;
+                    }
+                    else
+                    {
+                        executableResponse.Response = response;
+                    }
                     return executableResponse;
                 }).ToList();
 
@@ -154,7 +161,7 @@ namespace ClaudeApi.Agents.Orchestrations
             }
             else
             {
-                return Task.FromResult(default(T));
+                throw new InvalidCastException($"Cannot cast {item.GetType()} to {typeof(T)}");
             }
         }
 
@@ -169,7 +176,7 @@ namespace ClaudeApi.Agents.Orchestrations
 
                 foreach (var executableResponse in executableList)
                 {
-                    reportBuilder.AppendLine($"  Question: {((Ask)executableResponse.Executable).Prompt}");
+                    reportBuilder.AppendLine($"  Question: {executableResponse.Executable}");
                     reportBuilder.AppendLine($"  Answer: {executableResponse.Response}");
                     reportBuilder.AppendLine();
                 }
@@ -179,6 +186,5 @@ namespace ClaudeApi.Agents.Orchestrations
 
             return reportBuilder.ToString();
         }
-
     }
 }

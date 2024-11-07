@@ -1,13 +1,16 @@
 using ClaudeApi.Agents.Orchestrations;
 
-public class ExecutableResponse
+namespace ClaudeApi.Agents.Orchestrations
 {
-    public IExecute Executable { get; set; }
-    public Object Response { get; set; }
-
-    public ExecutableResponse(IExecute executable)
+    public class ExecutableResponse
     {
-        Executable = executable;
-        Response = string.Empty;
+        public IExecute Executable { get; set; }
+        public Object? Response { get; set; }
+
+        public ExecutableResponse(IExecute executable)
+        {
+            Executable = executable;
+            Response = string.Empty;
+        }
     }
 }

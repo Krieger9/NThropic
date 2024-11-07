@@ -7,7 +7,7 @@ using System.IO;
 
 namespace CodeAnalyzer
 {
-public class FileAnalyzer(IRequestExecutor executor) : IFileAnalyzer
+    public class FileAnalyzer(IRequestExecutor executor) : IFileAnalyzer
     {
         [Description("File Types Enum")]
         public enum FileTypes
@@ -34,7 +34,7 @@ public class FileAnalyzer(IRequestExecutor executor) : IFileAnalyzer
                     .Ask(new Prompt("GetFileType")
                     {
                         Name = "GetFileType",
-                        Arguments = new Dictionary<string, object> { 
+                        Arguments = new Dictionary<string, object> {
                             { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
                             { "possible_types", default(FileTypes).GetEnumDescription() }
                         }

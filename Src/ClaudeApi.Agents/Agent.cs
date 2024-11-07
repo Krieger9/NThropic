@@ -6,7 +6,6 @@ namespace ClaudeApi.Agents
     {
         public virtual string SystemPrompt { get; set; } = "You are a helpful assistant";
 
-        [AgentExecutorAttribute]
         public virtual async Task<string> ExecuteAsync(string input, Dictionary<string, object> arguments)
         {
             // Look for a method with the AgentExecuter attribute
