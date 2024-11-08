@@ -14,7 +14,11 @@ namespace ClaudeApi.Agents.Orchestrations
         private readonly IConfiguration _configuration;
         public static CHALLENGE_LEVEL _defaultChallengeLevel = CHALLENGE_LEVEL.PROFESSIONAL;
 
+        // State items.  These are what need to be dealt with to make thread safe.
         private readonly ObservableCollection<List<ExecutableResponse>> _executables = [];
+        private Dictionary<string, object> _baseArguments = new();
+        public CHALLENGE_LEVEL DefaultChallengeLevel { get; set; } = _defaultChallengeLevel;
+
         private readonly IConverterAgent _converterAgent;
         private readonly IChallengeLevelAssesementAgent _challengeLevelAssesementAgent;
         private readonly ISmartClient _client;
@@ -22,7 +26,6 @@ namespace ClaudeApi.Agents.Orchestrations
         private readonly IServiceProvider _serviceProvider;
 
         public string Contents { get { return GenerateContentsString(); } }
-        public CHALLENGE_LEVEL DefaultChallengeLevel { get; set; } = _defaultChallengeLevel;
         public IConverterAgent ConverterAgent { get { return _converterAgent; } }
         public IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get { return _challengeLevelAssesementAgent; } }
         public ISmartClient Client { get { return _client; } }
@@ -32,11 +35,6 @@ namespace ClaudeApi.Agents.Orchestrations
         private string GenerateContentsString()
         {
             return GenerateReport();
-        }
-
-        public void Clear()
-        {
-            _executables.Clear();
         }
 
         public RequestExecutor(IConfiguration configuration,
@@ -185,6 +183,32 @@ namespace ClaudeApi.Agents.Orchestrations
             }
 
             return reportBuilder.ToString();
+        }
+
+        public void Clear()
+        {
+            ClearArguments();
+            ClearExecutables();
+        }
+
+        public void ClearExecutables()
+        {
+            _executables.Clear();
+        }
+
+        public void ClearArguments()
+        {
+            _baseArguments.Clear();
+        }
+
+        public IRequestExecutor AddArguments(Dictionary<string, object> addArgs)
+        {
+            // append the new arguments to the base arguments
+            foreach (var arg in addArgs)
+            {
+                _baseArguments[arg.Key] = arg.Value;
+            }
+            return this;
         }
     }
 }
