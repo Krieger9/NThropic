@@ -9,23 +9,27 @@ namespace ClaudeApi.Agents.Orchestrations
     public interface IRequestExecutor
     {
         string Contents { get; }
+        CHALLENGE_LEVEL DefaultChallengeLevel { get; set; }
 
         IConverterAgent ConverterAgent { get; }
         IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get; }
         ISmartClient Client { get; }
         IPromptService PromptService { get; }
 
-        IRequestExecutor Ask(string ask);
-        IRequestExecutor Ask(List<string> asks);
-        IRequestExecutor ThenAsk(string ask);
-        IRequestExecutor ThenAsk(List<string> asks);
-        IRequestExecutor Ask(Prompt prompt);
-        IRequestExecutor Ask(List<Prompt> prompts);
-        IRequestExecutor ThenAsk(Prompt prompt);
-        IRequestExecutor ThenAsk(List<Prompt> prompts);
+        IRequestExecutor AddArguments(Dictionary<string, object> addArgs);
+        IRequestExecutor Ask(string ask, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor Ask(List<string> asks, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor ThenAsk(string ask, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor ThenAsk(List<string> asks, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor Ask(Prompt prompt, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor Ask(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor ThenAsk(Prompt prompt, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor ThenAsk(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null);
         IRequestExecutor ConvertTo<T>();
         IRequestExecutor ProcessByAgent(IAgent agent);
         Task<IRequestExecutor> ExecuteAsync();
         Task<T?> AsAsync<T>();
+
+        void Clear();
     }
 }

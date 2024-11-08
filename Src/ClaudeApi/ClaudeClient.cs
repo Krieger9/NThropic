@@ -133,71 +133,88 @@ namespace ClaudeApi
             var resolvedPrompt = await _promptService.ParsePromptAsync(prompt);
             var stop_sequence = "";
 
-            // Try to parse resolvedPrompt as PromptResponse
-            PromptResponse? promptResponse = null;
+            var promptResponse = TryParsePromptResponse(resolvedPrompt);
+
+            if (promptResponse != null)
+            {
+                var (filteredMessages, filteredSystemMessage) = FilterMessages(promptResponse);
+                (model, maxTokens, temperature, stop_sequence) = OverrideParameters(promptResponse, model, maxTokens, temperature, stop_sequence);
+
+                var result = await ProcessContinuousConversationAsync(filteredMessages, filteredSystemMessage, model, maxTokens, temperature, stop_sequence).ToSingleStringAsync();
+                result = TrimResult(result, stop_sequence);
+
+                return (result, resolvedPrompt);
+            }
+            else
+            {
+                var userMessage = CreateUserMessage(resolvedPrompt);
+                history.Add(userMessage);
+
+                var result = await ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature).ToSingleStringAsync();
+                return (result, resolvedPrompt);
+            }
+        }
+
+        private PromptResponse? TryParsePromptResponse(string resolvedPrompt)
+        {
             try
             {
-                promptResponse = JsonConvert.DeserializeObject<PromptResponse>(resolvedPrompt);
+                return JsonConvert.DeserializeObject<PromptResponse>(resolvedPrompt);
             }
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "Failed to parse resolvedPrompt as PromptResponse.");
+                return null;
             }
+        }
 
-            if (promptResponse != null)
+        private (List<Message> filteredMessages, List<ContentBlock>? filteredSystemMessage) FilterMessages(PromptResponse promptResponse)
+        {
+            var filteredMessages = promptResponse.Messages.Where(m => m.Role == "user" || m.Role == "assistant").ToList();
+            var filteredSystemMessage = promptResponse.Messages?.Where(m => m.Role == "system" && m.Content != null).SelectMany(m => m.Content!).ToList();
+            return (filteredMessages, filteredSystemMessage);
+        }
+
+        private (string model, int maxTokens, double temperature, string stop_sequence) OverrideParameters(PromptResponse promptResponse, string model, int maxTokens, double temperature, string stop_sequence)
+        {
+            if (promptResponse.Meta != null)
             {
-                // Filter history to include only "user" and "assistant" roles
-                var filteredMessages = promptResponse.Messages.Where(m => m.Role == "user" || m.Role == "assistant").ToList();
-
-                // Filter systemMessage to include only "system" role
-                var filteredSystemMessage = promptResponse.Messages?.Where(m => m.Role == "system" && m.Content != null).SelectMany(m => m.Content!).ToList();
-
-                // Override model, maxTokens, and temperature if present in PromptResponse metadata
-                if (promptResponse.Meta != null)
+                if (promptResponse.Meta.TryGetValue("model", out var modelValue))
                 {
-                    if (promptResponse.Meta.TryGetValue("model", out var modelValue))
-                    {
-                        model = modelValue.ToString();
-                    }
-                    if (promptResponse.Meta.TryGetValue("maxTokens", out var maxTokensValue))
-                    {
-                        maxTokens = int.Parse(maxTokensValue.ToString());
-                    }
-                    if (promptResponse.Meta.TryGetValue("temperature", out var temperatureValue))
-                    {
-                        temperature = double.Parse(temperatureValue.ToString());
-                    }
-
-                    if (promptResponse.Meta.TryGetValue("stop_sequence", out var stopSequenceValue))
-                    {
-                        stop_sequence = stopSequenceValue.ToString();
-                    }
+                    model = modelValue.ToString();
                 }
-
-                var result = await ProcessContinuousConversationAsync(filteredMessages, filteredSystemMessage, model, maxTokens, temperature, stop_sequence).ToSingleStringAsync();
-                result = result.Trim();
-                if(!string.IsNullOrWhiteSpace(result) && result.TrimEnd().EndsWith(stop_sequence))
+                if (promptResponse.Meta.TryGetValue("maxTokens", out var maxTokensValue))
                 {
-                    result = result.Substring(0, result.Length - stop_sequence.Length).TrimEnd();
+                    maxTokens = int.Parse(maxTokensValue.ToString());
                 }
-                return (
-                    result,
-                    resolvedPrompt
-                );
+                if (promptResponse.Meta.TryGetValue("temperature", out var temperatureValue))
+                {
+                    temperature = double.Parse(temperatureValue.ToString());
+                }
+                if (promptResponse.Meta.TryGetValue("stop_sequence", out var stopSequenceValue))
+                {
+                    stop_sequence = stopSequenceValue.ToString();
+                }
             }
-            else
-            {
-                var userMessage = new Message
-                {
-                    Role = "user",
-                    Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(resolvedPrompt) }
-                };
-                history.Add(userMessage);
+            return (model, maxTokens, temperature, stop_sequence);
+        }
 
-                return (
-                    await ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature).ToSingleStringAsync(),
-                    resolvedPrompt
-                    );
+        private string TrimResult(string result, string stop_sequence)
+        {
+            result = result.Trim();
+            if (!string.IsNullOrWhiteSpace(result) && result.TrimEnd().EndsWith(stop_sequence))
+            {
+                result = result.Substring(0, result.Length - stop_sequence.Length).TrimEnd();
+            }
+            return result;
+        }
+
+        private Message CreateUserMessage(string resolvedPrompt)
+        {
+            return new Message
+            {
+                Role = "user",
+                Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(resolvedPrompt) }
             };
         }
 

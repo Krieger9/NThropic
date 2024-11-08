@@ -33,32 +33,17 @@ namespace CodeAnalyzer
                 var run = await executor
                     .Ask(new Prompt("GetFileType")
                     {
-                        Name = "GetFileType",
+                        //Name = "GetFileType",
                         Arguments = new Dictionary<string, object> {
-                            { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
-                            { "possible_types", default(FileTypes).GetEnumDescription() }
+                                { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
+                                { "possible_types", default(FileTypes).GetEnumDescription() }
                         }
                     })
                     .ConvertTo<FileTypes>()
                     .ExecuteAsync();
                 var file_type = await run.AsAsync<FileTypes>();
 
-                if (file_type == FileTypes.Text)
-                {
-                    Console.WriteLine("The file is a text file.");
-                }
-                else if (file_type == FileTypes.Code)
-                {
-                    Console.WriteLine("The file is a code file.");
-                }
-                else if (file_type == FileTypes.Binary)
-                {
-                    Console.WriteLine("The file is a binary file.");
-                }
-                else
-                {
-                    Console.WriteLine("The file is of an unknown type.");
-                }
+                WriteFileTypeMessage(file_type);
 
                 File.WriteAllText(outputFilePath, run.Contents);
             }
@@ -66,6 +51,45 @@ namespace CodeAnalyzer
             {
                 Console.WriteLine($"An error occurred during file analysis: {ex.Message}");
             }
+        }
+
+        private void WriteFileTypeMessage(FileTypes fileType)
+        {
+            switch (fileType)
+            {
+                case FileTypes.Text:
+                    Console.WriteLine("The file is a text file.");
+                    break;
+                case FileTypes.Code:
+                    Console.WriteLine("The file is a code file.");
+                    break;
+                case FileTypes.Binary:
+                    Console.WriteLine("The file is a binary file.");
+                    break;
+                default:
+                    Console.WriteLine("The file is of an unknown type.");
+                    break;
+            }
+        }
+
+        public async Task AnalyzeCodeFile(Stream file_content_stream)
+        {
+            if (!file_content_stream.CanSeek)
+                throw new ArgumentException("The stream must be seekable.", nameof(file_content_stream));
+            file_content_stream.Seek(0, SeekOrigin.Begin);
+
+            var run = await executor
+                .AddArguments(
+                    new Dictionary<string, object> {
+                        { "file_contents", new StreamReader(file_content_stream).ReadToEnd() }
+                    })
+                .Ask(new Prompt("GeneralCodeAnalysis"))
+                .ThenAsk(new Prompt("ResponsibilityScope"))
+                    .Ask(new Prompt("ExternalEffects"))
+                    .Ask(new Prompt("DependencyCharacteristics"))
+                    .Ask(new Prompt("IntegrationService"))
+                .ExecuteAsync();
+            executor.Clear();
         }
     }
 }
