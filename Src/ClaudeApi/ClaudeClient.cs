@@ -168,14 +168,14 @@ namespace ClaudeApi
             }
         }
 
-        private (List<Message> filteredMessages, List<ContentBlock>? filteredSystemMessage) FilterMessages(PromptResponse promptResponse)
+        private static (List<Message> filteredMessages, List<ContentBlock>? filteredSystemMessage) FilterMessages(PromptResponse promptResponse)
         {
             var filteredMessages = promptResponse.Messages.Where(m => m.Role == "user" || m.Role == "assistant").ToList();
             var filteredSystemMessage = promptResponse.Messages?.Where(m => m.Role == "system" && m.Content != null).SelectMany(m => m.Content!).ToList();
             return (filteredMessages, filteredSystemMessage);
         }
 
-        private (string model, int maxTokens, double temperature, string stop_sequence) OverrideParameters(PromptResponse promptResponse, string model, int maxTokens, double temperature, string stop_sequence)
+        private static (string model, int maxTokens, double temperature, string stop_sequence) OverrideParameters(PromptResponse promptResponse, string model, int maxTokens, double temperature, string stop_sequence)
         {
             if (promptResponse.Meta != null)
             {
@@ -199,22 +199,22 @@ namespace ClaudeApi
             return (model, maxTokens, temperature, stop_sequence);
         }
 
-        private string TrimResult(string result, string stop_sequence)
+        private static string TrimResult(string result, string stop_sequence)
         {
             result = result.Trim();
             if (!string.IsNullOrWhiteSpace(result) && result.TrimEnd().EndsWith(stop_sequence))
             {
-                result = result.Substring(0, result.Length - stop_sequence.Length).TrimEnd();
+                result = result[..^stop_sequence.Length].TrimEnd();
             }
             return result;
         }
 
-        private Message CreateUserMessage(string resolvedPrompt)
+        private static Message CreateUserMessage(string resolvedPrompt)
         {
             return new Message
             {
                 Role = "user",
-                Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(resolvedPrompt) }
+                Content = [ContentBlock.FromString(resolvedPrompt)]
             };
         }
 

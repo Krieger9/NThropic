@@ -12,11 +12,13 @@ namespace ClaudeApi.Agents.Orchestrations
     public class RequestExecutor : IRequestExecutor
     {
         private readonly IConfiguration _configuration;
-        public static CHALLENGE_LEVEL _defaultChallengeLevel = CHALLENGE_LEVEL.PROFESSIONAL;
+        //This value sets the initial default value, but it can be changed so new IExecutables will default to the new value.
+        private static CHALLENGE_LEVEL _defaultChallengeLevel = CHALLENGE_LEVEL.PROFESSIONAL;
 
         // State items.  These are what need to be dealt with to make thread safe.
         private readonly ObservableCollection<List<ExecutableResponse>> _executables = [];
-        private Dictionary<string, object> _baseArguments = new();
+        private readonly Dictionary<string, object> _baseArguments = [];
+        // This sets the default for new IExecutables, it can change so not directly aligned with field _defaultChallengeLevel
         public CHALLENGE_LEVEL DefaultChallengeLevel { get; set; } = _defaultChallengeLevel;
 
         private readonly IConverterAgent _converterAgent;
@@ -116,13 +118,13 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public IRequestExecutor ProcessByAgent(IAgent agent)
         {
-            _executables.Add(new List<ExecutableResponse> { new ExecutableResponse(new AgentExecutable { Agent = agent }) });
+            _executables.Add([new(new AgentExecutable { Agent = agent })]);
             return this;
         }
 
         public IRequestExecutor ConvertTo<T>()
         {
-            _executables.Add(new List<ExecutableResponse> { new ExecutableResponse(new ConvertTo<T>()) });
+            _executables.Add([new(new ConvertTo<T>())]);
             return this;
         }
 
@@ -153,6 +155,7 @@ namespace ClaudeApi.Agents.Orchestrations
         public Task<T?> AsAsync<T>()
         {
             var item = _executables.Last().First().Response;
+            if(item is null) return Task.FromResult(default(T));
             if (item is T t)
             {
                 return Task.FromResult<T?>(t);
@@ -209,6 +212,11 @@ namespace ClaudeApi.Agents.Orchestrations
                 _baseArguments[arg.Key] = arg.Value;
             }
             return this;
+        }
+
+        public IRequestExecutor Contextualize()
+        {
+            throw new NotImplementedException();
         }
     }
 }

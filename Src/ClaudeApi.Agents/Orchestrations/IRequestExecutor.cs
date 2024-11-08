@@ -27,6 +27,7 @@ namespace ClaudeApi.Agents.Orchestrations
         IRequestExecutor ThenAsk(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null);
         IRequestExecutor ConvertTo<T>();
         IRequestExecutor ProcessByAgent(IAgent agent);
+        IRequestExecutor Contextualize();
         Task<IRequestExecutor> ExecuteAsync();
         Task<T?> AsAsync<T>();
 
