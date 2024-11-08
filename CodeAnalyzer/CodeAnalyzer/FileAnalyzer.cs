@@ -53,7 +53,7 @@ namespace CodeAnalyzer
             }
         }
 
-        private void WriteFileTypeMessage(FileTypes fileType)
+        private static void WriteFileTypeMessage(FileTypes fileType)
         {
             switch (fileType)
             {
@@ -88,6 +88,7 @@ namespace CodeAnalyzer
                     .Ask(new Prompt("ExternalEffects"))
                     .Ask(new Prompt("DependencyCharacteristics"))
                     .Ask(new Prompt("IntegrationService"))
+                .Contextualize()
                 .ExecuteAsync();
             executor.Clear();
         }
