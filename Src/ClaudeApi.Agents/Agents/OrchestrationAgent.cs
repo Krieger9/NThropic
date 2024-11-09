@@ -10,7 +10,7 @@ namespace ClaudeApi.Agents.Agents
 {
     public partial class OrchestrationAgent(IRequestExecutor executor) : Agent
     {
-        public async Task<string> ExecuteAsync(string input, WorkItem work_item)
+        public async Task<string> ExecuteAsync(string input)//, WorkItem work_item)
         {
             var plan = executor
                 .Ask(new Prompt("ChallengeLevelAssesement"))

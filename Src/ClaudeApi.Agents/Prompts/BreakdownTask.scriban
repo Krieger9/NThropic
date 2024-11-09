@@ -5,9 +5,6 @@ We'd like to break the steps down as simple as possible to reduce costs and to m
 However accuracy and proper implementation is the top priority.
 We do not want to break down a step unecessarily, so when given a task that should be solvable by a single person with no benefit to breaking it down, return just the task itself.
 
-## Given Task ##
-{{task}}
-
 ### Example 1 ###
 Task: "Build a house"
 Breakdown: ["Build a foundation", "Build walls", "Build roof", "Install plumbing", "Install electrical", "Install fixtures"]
@@ -15,6 +12,9 @@ Breakdown: ["Build a foundation", "Build walls", "Build roof", "Install plumbing
 ### Example 2 ###
 Task: "Tell me how many cards are in a deck"
 Breakdown Steps: "[Specify how many cards are in a deck]"
+
+## Given Task ##
+{{task}}
 
 ## Breakdown Steps ##
 
