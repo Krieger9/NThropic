@@ -14,7 +14,7 @@ namespace ClaudeApi.Agents.Orchestrations
         public string Details { get; set; }
         public List<IContext> SubContexts { get; private set; } = new List<IContext>();
 
-        public Context(string summary, string details, IContext parent = null)
+        public Context(string summary, string details, IContext? parent = null)
         {
             Summary = summary;
             Details = details;
@@ -23,8 +23,7 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public void AddSubContext(IContext subContext)
         {
-            if (subContext == null)
-                throw new ArgumentNullException(nameof(subContext));
+            ArgumentNullException.ThrowIfNull(subContext);
 
             subContext.SetParent(this);
             SubContexts.Add(subContext);
@@ -32,8 +31,7 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public void RemoveSubContext(IContext subContext)
         {
-            if (subContext == null)
-                throw new ArgumentNullException(nameof(subContext));
+            ArgumentNullException.ThrowIfNull(subContext);
 
             if (SubContexts.Remove(subContext))
             {

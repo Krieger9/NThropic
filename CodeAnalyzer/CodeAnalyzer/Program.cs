@@ -77,5 +77,5 @@ static void ConfigureServices(IServiceCollection services)
     services.AddTransient<ISandboxFileManager, SandboxFileManager>();
     services.AddHttpClient();
     services.AddClaudApi();
-    services.AddNThropicAgents();
+    services.AddNThropicAgents(configuration);
 }
