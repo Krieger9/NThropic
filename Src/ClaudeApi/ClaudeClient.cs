@@ -4,8 +4,10 @@ using ClaudeApi.Services;
 using ClaudeApi.Tools;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
@@ -13,7 +15,7 @@ using System.Threading.Channels;
 
 namespace ClaudeApi
 {
-    public partial class ClaudeClient
+    public partial class ClaudeClient : IClient
     {
         private readonly JObject _ephemeralCacheControl = JObject.Parse("{\"type\": \"ephemeral\"}");
         private readonly ILogger<ClaudeClient> _logger;
@@ -24,16 +26,16 @@ namespace ClaudeApi
         private readonly IClaudeApiService _claudeApiService;
         private readonly IPromptService _promptService;
 
-        private readonly Subject<Usage> _usageSubject = new ();
+        private readonly Subject<Usage> _usageSubject = new();
         public IObservable<Usage> UsageStream => _usageSubject.AsObservable();
 
         private readonly Subject<List<string>> _contextFilesSubject = new();
         public IObservable<List<string>> ContextFilesStream => _contextFilesSubject.AsObservable();
 
-        public ClaudeClient(ISandboxFileManager sandboxFileManager, 
-            IToolManagementService toolManagementService, 
-            IClaudeApiService claudeApiService, 
-            ILogger<ClaudeClient> logger, 
+        public ClaudeClient(ISandboxFileManager sandboxFileManager,
+            IToolManagementService toolManagementService,
+            IClaudeApiService claudeApiService,
+            ILogger<ClaudeClient> logger,
             IPromptService promptService,
             IServiceProvider serviceProvider)
         {
@@ -70,11 +72,12 @@ namespace ClaudeApi
          List<ContentBlock>? systemMessage = null,
          string model = "claude-3-5-sonnet-20240620",
          int maxTokens = 1024,
-         double temperature = 1.0)
+         double temperature = 1.0,
+         string stop_sequence = "")
         {
             var channel = Channel.CreateUnbounded<string>();
 
-            _ = ProcessConversationInternalAsync(channel.Writer, initialMessages, systemMessage, model, maxTokens, temperature);
+            _ = ProcessConversationInternalAsync(channel.Writer, initialMessages, systemMessage, model, maxTokens, temperature, stop_sequence);
 
             return channel.Reader.ReadAllAsync();
         }
@@ -119,7 +122,7 @@ namespace ClaudeApi
             return ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature);
         }
 
-        public async Task<IAsyncEnumerable<string>> ProcessContinuousConversationAsync(
+        public async Task<(string response, string resolvedPrompt)> ProcessContinuousConversationAsync(
             Prompt prompt,
             List<Message> history,
             List<ContentBlock>? systemMessage = null,
@@ -127,10 +130,92 @@ namespace ClaudeApi
             int maxTokens = 1024,
             double temperature = 1.0)
         {
-            var userMessage = await _promptService.ParsePromptAsync(prompt);
-            history.Add(userMessage);
+            var resolvedPrompt = await _promptService.ParsePromptAsync(prompt);
+            var stop_sequence = "";
 
-            return ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature);
+            var promptResponse = TryParsePromptResponse(resolvedPrompt);
+
+            if (promptResponse != null)
+            {
+                var (filteredMessages, filteredSystemMessage) = FilterMessages(promptResponse);
+                (model, maxTokens, temperature, stop_sequence) = OverrideParameters(promptResponse, model, maxTokens, temperature, stop_sequence);
+
+                var result = await ProcessContinuousConversationAsync(filteredMessages, filteredSystemMessage, model, maxTokens, temperature, stop_sequence).ToSingleStringAsync();
+                result = TrimResult(result, stop_sequence);
+
+                return (result, resolvedPrompt);
+            }
+            else
+            {
+                var userMessage = CreateUserMessage(resolvedPrompt);
+                history.Add(userMessage);
+
+                var result = await ProcessContinuousConversationAsync(history, systemMessage, model, maxTokens, temperature).ToSingleStringAsync();
+                return (result, resolvedPrompt);
+            }
+        }
+
+        private PromptResponse? TryParsePromptResponse(string resolvedPrompt)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<PromptResponse>(resolvedPrompt);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Failed to parse resolvedPrompt as PromptResponse.");
+                return null;
+            }
+        }
+
+        private static (List<Message> filteredMessages, List<ContentBlock>? filteredSystemMessage) FilterMessages(PromptResponse promptResponse)
+        {
+            var filteredMessages = promptResponse.Messages.Where(m => m.Role == "user" || m.Role == "assistant").ToList();
+            var filteredSystemMessage = promptResponse.Messages?.Where(m => m.Role == "system" && m.Content != null).SelectMany(m => m.Content!).ToList();
+            return (filteredMessages, filteredSystemMessage);
+        }
+
+        private static (string model, int maxTokens, double temperature, string stop_sequence) OverrideParameters(PromptResponse promptResponse, string model, int maxTokens, double temperature, string stop_sequence)
+        {
+            if (promptResponse.Meta != null)
+            {
+                if (promptResponse.Meta.TryGetValue("model", out var modelValue))
+                {
+                    model = modelValue.ToString();
+                }
+                if (promptResponse.Meta.TryGetValue("maxTokens", out var maxTokensValue))
+                {
+                    maxTokens = int.Parse(maxTokensValue.ToString());
+                }
+                if (promptResponse.Meta.TryGetValue("temperature", out var temperatureValue))
+                {
+                    temperature = double.Parse(temperatureValue.ToString());
+                }
+                if (promptResponse.Meta.TryGetValue("stop_sequence", out var stopSequenceValue))
+                {
+                    stop_sequence = stopSequenceValue.ToString();
+                }
+            }
+            return (model, maxTokens, temperature, stop_sequence);
+        }
+
+        private static string TrimResult(string result, string stop_sequence)
+        {
+            result = result.Trim();
+            if (!string.IsNullOrWhiteSpace(result) && result.TrimEnd().EndsWith(stop_sequence))
+            {
+                result = result[..^stop_sequence.Length].TrimEnd();
+            }
+            return result;
+        }
+
+        private static Message CreateUserMessage(string resolvedPrompt)
+        {
+            return new Message
+            {
+                Role = "user",
+                Content = [ContentBlock.FromString(resolvedPrompt)]
+            };
         }
 
         private async Task ProcessConversationInternalAsync(
@@ -139,13 +224,14 @@ namespace ClaudeApi
             List<ContentBlock>? systemMessage,
             string model,
             int maxTokens,
-            double temperature)
+            double temperature,
+            string stop_sequence = "")
         {
             try
             {
                 while (true)
                 {
-                    var apiCall = CreateMessageStreamAsyncInternal(messages, systemMessage, model, maxTokens, temperature);
+                    var apiCall = CreateMessageStreamAsyncInternal(messages, systemMessage, model, maxTokens, temperature, stop_sequence);
                     var toolCompletionQueue = new BlockingCollection<ToolResult>();
                     var sseProcessor = new SseProcessor(_serviceProvider.GetRequiredService<ILogger<SseProcessor>>());
 
@@ -225,7 +311,8 @@ namespace ClaudeApi
             List<ContentBlock>? systemMessage,
             string model,
             int maxTokens,
-            double temperature)
+            double temperature,
+            string stop_sequence)
         {
             var use_tools = _toolManagementService.ToolRegistry.Tools.Select(t => new MessagesRequest.ToolInfo
             {
@@ -257,7 +344,8 @@ namespace ClaudeApi
                 MaxTokens = maxTokens,
                 Temperature = temperature,
                 Stream = true,
-                Tools = use_tools
+                Tools = use_tools,
+                StopSequences = [stop_sequence]
             };
 
             return await _claudeApiService.SendMessageAsync(request, messages, systemMessage, _contextFiles);

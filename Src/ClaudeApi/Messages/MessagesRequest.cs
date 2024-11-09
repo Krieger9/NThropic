@@ -27,6 +27,9 @@ namespace ClaudeApi.Messages
         [JsonProperty("tools")]
         public List<ToolInfo>? Tools { get; set; }
 
+        [JsonProperty("stop_sequences")]
+        public List<string>? StopSequences { get; set; }
+
         public class ToolInfo
         {
             [JsonProperty("name")]

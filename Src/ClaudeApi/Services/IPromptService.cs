@@ -10,6 +10,6 @@ namespace ClaudeApi.Services
 {
     public interface IPromptService
     {
-        Task<Message> ParsePromptAsync(Prompt prompt);
+        Task<string> ParsePromptAsync(Prompt prompt);
     }
 }

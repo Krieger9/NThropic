@@ -1,0 +1,10 @@
+{
+  "ClaudeApiKey": "",
+  "Sanctuary": {
+    "SandBoxBasePath": "d:\\data\\sandbox"
+  },
+  "ContextualizeAgent": {
+    "ChallengeLevel": "INTERMEDIATE",
+    "SummaryLengthThreshold": 1024
+  }
+}

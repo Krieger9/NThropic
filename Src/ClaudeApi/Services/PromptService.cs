@@ -13,12 +13,11 @@ namespace ClaudeApi.Services
 
         public PromptService(IConfiguration configuration, ILogger<PromptService> logger)
         {
-
             _promptsFolder = configuration["PromptsFolder"] ?? "./Prompts";
             _logger = logger;
         }
 
-        public async Task<Message> ParsePromptAsync(Prompt prompt)
+        public async Task<string> ParsePromptAsync(Prompt prompt)
         {
             var filePath = Path.Combine(AppContext.BaseDirectory, _promptsFolder, $"{prompt.Name}.scriban");
             if (!File.Exists(filePath))
@@ -35,11 +34,8 @@ namespace ClaudeApi.Services
             }
 
             var renderedContent = template.Render(prompt.Arguments);
-            return new Message
-            {
-                Role = "user",
-                Content = [ContentBlock.FromString(renderedContent)]
-            };
+
+            return renderedContent;
         }
     }
 }

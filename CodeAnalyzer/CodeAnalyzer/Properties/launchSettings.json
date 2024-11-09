@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CodeAnalyzer": {
+      "commandName": "Project",
+      "commandLineArgs": "'d:\\data\\CodeSamples\\dirty_sample1.cs' 'd:\\data\\CodeSamples\\dirty_comments.cs'"
+    }
+  }
+}

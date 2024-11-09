@@ -1,0 +1,47 @@
+{{ capture user_block}}
+Look at the given context and fill out the following json template according to the provided schema.
+Respond with only the answer in the json format.  If this is an enum, respond with the enum name not the backing value.
+Place the answer between xml result tags.
+
+<Examples>
+	<Example>
+		"<Result>GREEN</Result>"
+	<Example>
+	<Example>
+		"<Result>{'measurement':'temperature','value': 25}</Result>"
+	<Example>
+</Examples>
+
+### Context / Information ###
+{{context}}
+
+### Schema ###
+{{json_schema}}
+
+{{ end }}
+
+
+{{ capture assistant_block }}
+Sure.  Given the context the result is...
+<Result>
+{{ end }}
+
+
+{{
+user_message = {}
+user_message.role = 'user'
+user_message.content = user_block|string.strip
+
+assistant_message = {}
+assistant_message.role = 'assistant'
+assistant_message.content = assistant_block|string.strip
+
+result = {}
+result.Messages = []
+result.Messages[0] = user_message
+result.Messages[1] = assistant_message
+result.Meta = {}
+result.Meta.stop_sequence="</Result>"
+
+result|object.to_json
+}}
