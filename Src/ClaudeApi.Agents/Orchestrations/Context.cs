@@ -8,6 +8,7 @@ namespace ClaudeApi.Agents.Orchestrations
 {
     public class Context : IContext
     {
+        public static IContext Empty { get; } = new Context("Empty", "Empty");
         public IContext? Parent { get; private set; }
         public string Summary { get; set; }
         public string Details { get; set; }

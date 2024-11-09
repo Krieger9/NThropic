@@ -14,14 +14,18 @@ namespace ClaudeApi.Agents.Agents
             var information = asks.SelectMany(a => a.Where(r => r.Response is string).Select(r => r.Response as string)).Aggregate((a, b) => $"<Question>{a}</Question><Answer>{b}</Answer>\n");
             if(information == null)
             {
-                return new Context(information);
+                return Context.Empty;
             }
             return await ContextualizeInternal(information);
-
         }
         public async Task<IContext> ContextualizeInternal(string information)
         {
-            return await Task.FromResult(information);
+            return Context.Empty;
+        }
+
+        private async Task<string> GetSummary(string information)
+        {
+            return information;
         }
     }
 }
