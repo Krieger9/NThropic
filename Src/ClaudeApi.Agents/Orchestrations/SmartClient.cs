@@ -19,7 +19,7 @@ namespace ClaudeApi.Agents.Orchestrations
                         { CHALLENGE_LEVEL.AUTO, ("auto-model", 4096, 0.0) },
                         { CHALLENGE_LEVEL.NONE, ("none-model", 512, 0.0) },
                         { CHALLENGE_LEVEL.ELEMENTARY, ("claude-3-haiku-20240307", 1024, 0.0) },
-                        { CHALLENGE_LEVEL.INTERMEDIATE, ("claude-3-haiku-20240307", 2048, 0.0) },
+                        { CHALLENGE_LEVEL.INTERMEDIATE, ("claude-3-5-haiku-20241022", 2048, 0.0) },
                         { CHALLENGE_LEVEL.PROFESSIONAL, ("claude-3-5-sonnet-20241022", 4096, 0.0) },
                         { CHALLENGE_LEVEL.EXPERT, ("claude-3-5-sonnet-20241022", 4096, 0.0) },
                         { CHALLENGE_LEVEL.LEADING_EXPERT, ("claude-3-5-sonnet-20241022", 4096, 0.0) }

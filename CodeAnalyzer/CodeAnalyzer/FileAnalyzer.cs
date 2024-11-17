@@ -30,22 +30,25 @@ namespace CodeAnalyzer
             {
                 using FileStream inputStream = new(inputFilePath, FileMode.Open, FileAccess.Read);
                 Console.WriteLine("Analyzing the file...");
-                var run = await executor
-                    .Ask(new Prompt("GetFileType")
-                    {
-                        //Name = "GetFileType",
-                        Arguments = new Dictionary<string, object> {
-                                { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
-                                { "possible_types", default(FileTypes).GetEnumDescription() }
-                        }
-                    })
-                    .ConvertTo<FileTypes>()
-                    .ExecuteAsync();
-                var file_type = await run.AsAsync<FileTypes>();
-
+                //                var file_type = await executor
+                //                    .Ask(new Prompt("GetFileType")
+                //                    {
+                //                        //Name = "GetFileType",
+                //                        Arguments = new Dictionary<string, object> {
+                //                                { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
+                //                                { "possible_types", default(FileTypes).GetEnumDescription() }
+                //                        }
+                //                    })
+                //                    .ConvertTo<FileTypes>();
+                //
+                var file_type = FileTypes.Code;
                 WriteFileTypeMessage(file_type);
+                if(file_type == FileTypes.Code)
+                {
+                    Console.WriteLine(await AnalyzeCodeFile(inputStream));
+                }
 
-                File.WriteAllText(outputFilePath, run.Contents);
+                File.WriteAllText(outputFilePath, executor.InformationString);
             }
             catch (Exception ex)
             {
@@ -72,25 +75,29 @@ namespace CodeAnalyzer
             }
         }
 
-        public async Task AnalyzeCodeFile(Stream file_content_stream)
+        public async Task<string> AnalyzeCodeFile(Stream file_content_stream)
         {
             if (!file_content_stream.CanSeek)
                 throw new ArgumentException("The stream must be seekable.", nameof(file_content_stream));
             file_content_stream.Seek(0, SeekOrigin.Begin);
 
             var run = await executor
+                .SetChallengeLevel(CHALLENGE_LEVEL.ELEMENTARY)
                 .AddArguments(
                     new Dictionary<string, object> {
                         { "file_contents", new StreamReader(file_content_stream).ReadToEnd() }
                     })
                 .Ask(new Prompt("GeneralCodeAnalysis"))
-                .ThenAsk(new Prompt("ResponsibilityScope"))
+                .ThenAsk(new Prompt("CodeStructure"), null, CHALLENGE_LEVEL.INTERMEDIATE)
+                    .Ask(new Prompt("DependencyMap"))
+                    .Ask(new Prompt("SecurityProfile"))
+                .ThenAsk(new Prompt("SystemIntegration"))
                     .Ask(new Prompt("ExternalEffects"))
-                    .Ask(new Prompt("DependencyCharacteristics"))
-                    .Ask(new Prompt("IntegrationService"))
-                .Contextualize()
-                .ExecuteAsync();
+                    .Ask(new Prompt("MaintenanceProfile"))                
+                //.Contextualize()
+                .Result();
             executor.Clear();
+            return run;
         }
     }
 }

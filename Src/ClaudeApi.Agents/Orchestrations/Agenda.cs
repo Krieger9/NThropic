@@ -26,21 +26,25 @@ namespace ClaudeApi.Agents.Orchestrations
         Object? ObjectValue { get; }
     }
 
-    public class ConvertTo<T> : IExecute, IObjectValue
+    public class SetChallengeLevelExecutable : IExecute
     {
-        public Object? ObjectValue { get; set; }
+        private readonly CHALLENGE_LEVEL _challengeLevel;
 
-        public async Task<string> ExecuteAsync(IRequestExecutor requestExtractor)
+        public SetChallengeLevelExecutable(CHALLENGE_LEVEL challengeLevel)
         {
-            //var result = await requestExtractor.ConverterAgent.ExecuteAsync(requestExtractor.Contents, new Dictionary<string, object> { { "desiredType", typeof(T) } });
-            ObjectValue = await requestExtractor.ConverterAgent.ConvertToAsync(requestExtractor.Contents, typeof(T));
-            return JsonConvert.SerializeObject(ObjectValue);
+            _challengeLevel = challengeLevel;
+        }
+
+        public async Task<string> ExecuteAsync(IRequestExecutor requestExecutor)
+        {
+            requestExecutor.SetChallengeLevel(_challengeLevel);
+            return await Task.FromResult(string.Empty);
         }
     }
 
     public class Ask : IExecute
     {
-        public CHALLENGE_LEVEL ChallengeLevel { get; set; }
+        public CHALLENGE_LEVEL? ChallengeLevel { get; set; }
         public string? Prompt { get; set; }
 
         public virtual async Task<string> ExecuteAsync(IRequestExecutor requestExtractor)
@@ -49,7 +53,10 @@ namespace ClaudeApi.Agents.Orchestrations
             {
                 throw new Exception($"Prompt is not set {nameof(Ask)}");
             }
-            return await requestExtractor.Client.ProcessContinuousConversationAsync(Prompt, ChallengeLevel).ToSingleStringAsync();
+            return await requestExtractor.Client.ProcessContinuousConversationAsync(
+                Prompt, 
+                ChallengeLevel ?? requestExtractor.DefaultChallengeLevel
+            ).ToSingleStringAsync();
         }
 
         public override string ToString()
@@ -61,8 +68,9 @@ namespace ClaudeApi.Agents.Orchestrations
     public class PromptAsk : IExecute
     {
         public Prompt? Prompt { get; set; }
+        public IDictionary<string, object>? RunArguments { get; set; }
         public string? ResolvedPrompt { get; set; }
-        public CHALLENGE_LEVEL ChallengeLevel { get; set; }
+        public CHALLENGE_LEVEL? ChallengeLevel { get; set; }
 
         public async Task<string> ExecuteAsync(IRequestExecutor requestExecutor)
         {
@@ -71,15 +79,48 @@ namespace ClaudeApi.Agents.Orchestrations
                 throw new Exception($"AdditionalPrompt is not set in {nameof(PromptAsk)}");
             }
 
-            var (result, resolvedPrompt) = await requestExecutor.Client.ProcessContinuousConversationAsync(Prompt, [], ChallengeLevel, null);
-            ResolvedPrompt = resolvedPrompt;
-            return result;
+            try
+            {
+                var arguments = CombineArguments(Prompt.Arguments, requestExecutor.BaseArguments, RunArguments);
+                var cloned = Prompt.Clone(arguments, false);
+                var (result, resolvedPrompt) = await requestExecutor.Client.ProcessContinuousConversationAsync(
+                    cloned,
+                    [],
+                    ChallengeLevel ?? requestExecutor.DefaultChallengeLevel, null
+                );
+                ResolvedPrompt = resolvedPrompt;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error processing prompt '{Prompt.Name}': {ex.Message}", ex);
+            }
         }
 
+        // Can we remove?
         public override string ToString()
         {
             return $"{ResolvedPrompt}";
         }
+
+        private static Dictionary<string, object> CombineArguments(params IDictionary<string, object>?[] dictionaries)
+        {
+            var combinedArguments = new Dictionary<string, object>();
+
+            foreach (var dict in dictionaries)
+            {
+                if (dict != null)
+                {
+                    foreach (var arg in dict)
+                    {
+                        combinedArguments[arg.Key] = arg.Value;
+                    }
+                }
+            }
+
+            return combinedArguments;
+        }
+
     }
 
     public class AgentExecutable : IExecute
@@ -91,7 +132,7 @@ namespace ClaudeApi.Agents.Orchestrations
             {
                 throw new Exception($"Agent is not set {nameof(AgentExecutable)}");
             }
-            return await Agent.ExecuteAsync(requestExtractor.Contents, []);
+            return await Agent.ExecuteAsync(requestExtractor.InformationString, []);
         }
     }
 }

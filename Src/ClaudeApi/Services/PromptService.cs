@@ -35,7 +35,7 @@ namespace ClaudeApi.Services
 
             var renderedContent = template.Render(prompt.Arguments);
 
-            return renderedContent;
+            return renderedContent.Trim();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace ClaudeApi.Prompts
     public class Prompt
     {
         public string Name { get; set; }
-        public Dictionary<string, object>? Arguments { get; set; }
+        public IDictionary<string, object>? Arguments { get; set; }
 
         public Prompt(string name)
         {
@@ -19,6 +19,29 @@ namespace ClaudeApi.Prompts
             }
 
             Name = name;
+        }
+
+        public Prompt Clone(IDictionary<string, object>? arguments = null, bool overwriteArguments = true)
+        {
+            var clonedArguments = Arguments != null
+                ? new Dictionary<string, object>(Arguments)
+                : new Dictionary<string, object>();
+
+            if (arguments != null)
+            {
+                foreach (var kvp in arguments)
+                {
+                    if (overwriteArguments || !clonedArguments.ContainsKey(kvp.Key))
+                    {
+                        clonedArguments[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            return new Prompt(Name)
+            {
+                Arguments = clonedArguments
+            };
         }
     }
 }

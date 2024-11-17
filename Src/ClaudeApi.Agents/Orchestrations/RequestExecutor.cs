@@ -3,6 +3,7 @@ using ClaudeApi.Agents.Agents.Converters;
 using ClaudeApi.Prompts;
 using ClaudeApi.Services;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
@@ -27,18 +28,20 @@ namespace ClaudeApi.Agents.Orchestrations
         private readonly IPromptService _promptService;
         private readonly IServiceProvider _serviceProvider;
 
-        public string Contents { get { return GenerateContentsString(); } }
         public IConverterAgent ConverterAgent { get { return _converterAgent; } }
         public IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get { return _challengeLevelAssesementAgent; } }
         public ISmartClient Client { get { return _client; } }
         public IPromptService PromptService { get { return _promptService; } }
         public IServiceProvider ServiceProvider { get { return _serviceProvider; } }
-
-        private string GenerateContentsString()
+        public IDictionary<string, object> BaseArguments
         {
-            return GenerateReport();
+            get { return new ReadOnlyDictionary<string, object>(_baseArguments); }
         }
-
+        public IRequestExecutor SetChallengeLevel(CHALLENGE_LEVEL challengeLevel)
+        {
+            DefaultChallengeLevel = challengeLevel;
+            return this;
+        }
         public RequestExecutor(IConfiguration configuration,
             IConverterAgent genericConverterAgent,
             IChallengeLevelAssesementAgent challengeLevelAssesementAgent,
@@ -62,7 +65,7 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public IRequestExecutor Ask(string ask, CHALLENGE_LEVEL? challengeLevel = null)
         {
-            return Ask(new List<string> { ask }, challengeLevel);
+            return Ask([ask], challengeLevel);
         }
 
         public IRequestExecutor Ask(List<string> asks, CHALLENGE_LEVEL? challengeLevel = null)
@@ -82,7 +85,7 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public IRequestExecutor ThenAsk(string ask, CHALLENGE_LEVEL? challengeLevel = null)
         {
-            return ThenAsk(new List<string> { ask }, challengeLevel);
+            return ThenAsk([ask], challengeLevel);
         }
 
         public IRequestExecutor ThenAsk(List<string> asks, CHALLENGE_LEVEL? challengeLevel = null)
@@ -92,27 +95,34 @@ namespace ClaudeApi.Agents.Orchestrations
             return this;
         }
 
-        public IRequestExecutor Ask(Prompt prompt, CHALLENGE_LEVEL? challengeLevel = null)
+        public IRequestExecutor Ask(Prompt prompt, Dictionary<string, object>? arguments, CHALLENGE_LEVEL? challengeLevel = null)
         {
-            return Ask(new List<Prompt> { prompt }, challengeLevel);
+            return Ask([prompt], arguments, challengeLevel);
         }
 
-        public IRequestExecutor Ask(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null)
+        public IRequestExecutor Ask(List<Prompt> prompts, Dictionary<string, object>? arguments, CHALLENGE_LEVEL? challengeLevel = null)
         {
-            challengeLevel ??= _defaultChallengeLevel;
-            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { Prompt = p, ChallengeLevel = challengeLevel.Value })).ToList());
+            _executables.Add(
+                prompts.Select(p =>
+                {
+                    return new ExecutableResponse(
+                        new PromptAsk { Prompt = p, RunArguments = arguments, ChallengeLevel = challengeLevel });
+                }).ToList());
             return this;
         }
 
-        public IRequestExecutor ThenAsk(Prompt prompt, CHALLENGE_LEVEL? challengeLevel = null)
+        public IRequestExecutor ThenAsk(Prompt prompt, Dictionary<string, object>? arguments = null, CHALLENGE_LEVEL? challengeLevel = null)
         {
-            return ThenAsk(new List<Prompt> { prompt }, challengeLevel);
+            return ThenAsk([prompt], arguments, challengeLevel);
         }
 
-        public IRequestExecutor ThenAsk(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null)
+        public IRequestExecutor ThenAsk(List<Prompt> prompts, Dictionary<string, object>? arguments = null, CHALLENGE_LEVEL? challengeLevel = null)
         {
-            challengeLevel ??= _defaultChallengeLevel;
-            _executables.Add(prompts.Select(p => new ExecutableResponse(new PromptAsk { Prompt = p, ChallengeLevel = challengeLevel.Value })).ToList());
+            _executables.Add(
+                prompts.Select(p =>
+                {
+                    return new ExecutableResponse(new PromptAsk { Prompt = p, RunArguments = arguments, ChallengeLevel = challengeLevel });
+                }).ToList());
             return this;
         }
 
@@ -122,19 +132,44 @@ namespace ClaudeApi.Agents.Orchestrations
             return this;
         }
 
-        public IRequestExecutor ConvertTo<T>()
+        public async Task<string> Result()
         {
-            _executables.Add([new(new ConvertTo<T>())]);
-            return this;
+            await ExecuteAsync();
+            return string.Join("\n", _executables.Last().Select(r => r.Response));
+        }
+
+        public async Task<T> ConvertTo<T>()
+        {
+            var result = await ExecuteAsync();
+            var prompt = string.Join("\n", result.Information);
+            var converted_object = await _converterAgent.ConvertToAsync(prompt, typeof(T));
+            if (converted_object is T t)
+            {
+                return t;
+            }
+            else
+            {
+                throw new InvalidCastException($"Cannot cast {converted_object?.GetType()} to {typeof(T)}");
+            }
         }
 
         public async Task<IRequestExecutor> ExecuteAsync()
         {
+            ConcurrentBag<Exception> exceptions = [];
+
             foreach (var executableList in _executables)
             {
                 var tasks = executableList.Select(async executableResponse =>
                 {
-                    var response = await executableResponse.Executable.ExecuteAsync(this);
+                    var response = "";
+                    try
+                    {
+                        response = await executableResponse.Executable.ExecuteAsync(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        exceptions.Add(ex);
+                    }
                     if (executableResponse.Executable is IObjectValue objectValueItem)
                     {
                         executableResponse.Response = objectValueItem.ObjectValue;
@@ -147,23 +182,13 @@ namespace ClaudeApi.Agents.Orchestrations
                 }).ToList();
 
                 var responses = await Task.WhenAll(tasks);
+                if (!exceptions.IsEmpty)
+                {
+                    throw new AggregateException(exceptions);
+                }
             }
 
             return this;
-        }
-
-        public Task<T?> AsAsync<T>()
-        {
-            var item = _executables.Last().First().Response;
-            if(item is null) return Task.FromResult(default(T));
-            if (item is T t)
-            {
-                return Task.FromResult<T?>(t);
-            }
-            else
-            {
-                throw new InvalidCastException($"Cannot cast {item.GetType()} to {typeof(T)}");
-            }
         }
 
         public string GenerateReport()
@@ -217,6 +242,31 @@ namespace ClaudeApi.Agents.Orchestrations
         public IRequestExecutor Contextualize()
         {
             throw new NotImplementedException();
+        }
+
+        public string InformationString { get { return string.Join("\n", Information); } }
+        public List<string> Information
+        {
+            get
+            {
+                var responses = new List<string>();
+
+                foreach (var executableList in _executables)
+                {
+                    foreach (var executableResponse in executableList)
+                    {
+                        var asString = executableResponse.Response?.ToString();
+                        if (executableResponse.Response != null 
+                            && executableResponse.Response is not IObjectValue
+                            && !string.IsNullOrWhiteSpace(asString))
+                        {
+                            responses.Add(asString);
+                        }
+                    }
+                }
+
+                return responses;
+            }
         }
     }
 }

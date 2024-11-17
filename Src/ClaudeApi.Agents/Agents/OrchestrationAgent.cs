@@ -19,8 +19,7 @@ namespace ClaudeApi.Agents.Agents
                     Arguments = new Dictionary<string, object>{{"task", input}}
                 });
 
-            var run = await plan.ExecuteAsync();
-            var result = await run.AsAsync<string>();
+            var result = await plan.Result();
             return result ?? "No response received.";
         }
     }

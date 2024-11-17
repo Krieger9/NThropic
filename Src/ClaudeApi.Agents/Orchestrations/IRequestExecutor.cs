@@ -8,28 +8,31 @@ namespace ClaudeApi.Agents.Orchestrations
 {
     public interface IRequestExecutor
     {
-        string Contents { get; }
         CHALLENGE_LEVEL DefaultChallengeLevel { get; set; }
 
         IConverterAgent ConverterAgent { get; }
         IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get; }
         ISmartClient Client { get; }
         IPromptService PromptService { get; }
+        IDictionary<string, object> BaseArguments { get; }
 
         IRequestExecutor AddArguments(Dictionary<string, object> addArgs);
         IRequestExecutor Ask(string ask, CHALLENGE_LEVEL? challengeLevel = null);
         IRequestExecutor Ask(List<string> asks, CHALLENGE_LEVEL? challengeLevel = null);
         IRequestExecutor ThenAsk(string ask, CHALLENGE_LEVEL? challengeLevel = null);
         IRequestExecutor ThenAsk(List<string> asks, CHALLENGE_LEVEL? challengeLevel = null);
-        IRequestExecutor Ask(Prompt prompt, CHALLENGE_LEVEL? challengeLevel = null);
-        IRequestExecutor Ask(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null);
-        IRequestExecutor ThenAsk(Prompt prompt, CHALLENGE_LEVEL? challengeLevel = null);
-        IRequestExecutor ThenAsk(List<Prompt> prompts, CHALLENGE_LEVEL? challengeLevel = null);
-        IRequestExecutor ConvertTo<T>();
+        IRequestExecutor Ask(Prompt prompt, Dictionary<string,object>? arguments = null, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor Ask(List<Prompt> prompts, Dictionary<string,object>? arguments = null, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor ThenAsk(Prompt prompt, Dictionary<string,object>? arguments = null, CHALLENGE_LEVEL? challengeLevel = null);
+        IRequestExecutor ThenAsk(List<Prompt> prompts, Dictionary<string, object>? arguments, CHALLENGE_LEVEL? challengeLevel = null);
         IRequestExecutor ProcessByAgent(IAgent agent);
         IRequestExecutor Contextualize();
-        Task<IRequestExecutor> ExecuteAsync();
-        Task<T?> AsAsync<T>();
+        IRequestExecutor SetChallengeLevel(CHALLENGE_LEVEL challengeLevel);
+        List<string> Information { get; }
+        string InformationString { get; }
+
+        Task<string> Result();
+        Task<T> ConvertTo<T>();
 
         void Clear();
     }

@@ -1,0 +1,37 @@
+{{ capture system_block }}
+You're analyzing how maintainable this code is, using context from previous analyses. 
+Share your observations naturally, noting both current state and potential future issues.
+{{ end }}
+
+{{ capture user_block }}
+Examine the maintenance aspects of this code:
+
+What makes it more or less maintainable?
+Where do you see potential future problems?
+What parts seem most likely to need attention?
+How might it evolve or need to change?
+Which maintenance concerns are most/least certain?
+
+Explain your reasoning and note your confidence levels for different observations.
+
+<code>
+{{ file_contents }}
+</code>
+{{ end }}
+
+{{
+user_message = {}
+user_message.role = 'user'
+user_message.content = user_block|string.strip
+
+system_message = {}
+system_message.role = 'system'
+system_message.content = system_block|string.strip
+
+result = {}
+result.Messages = []
+result.Messages[0] = user_message
+result.Messages[1] = system_message
+
+result|object.to_json
+}}
