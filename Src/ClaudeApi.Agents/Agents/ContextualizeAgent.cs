@@ -1,44 +1,73 @@
 ﻿using ClaudeApi.Agents.Agents.Configs;
+using ClaudeApi.Agents.ContextCore;
 using ClaudeApi.Agents.Orchestrations;
+using ClaudeApi.Prompts;
 using Microsoft.Extensions.Options;
+using NJsonSchema;
+using Scriban;
 
 namespace ClaudeApi.Agents.Agents
 {
-    public class ContextualizeAgent : Agent
+    public class ContextualizeAgent : Agent, IContextualizeAgent
     {
         private readonly ContextualizeAgentConfig _config;
-        private readonly SummaryAgent _summarryAgent;
+        private readonly IClient _client;
 
-        public ContextualizeAgent(IOptions<ContextualizeAgentConfig> config, SummaryAgent summaryAgent)
+        public ContextualizeAgent(IClient client, IOptions<ContextualizeAgentConfig> config)
         {
             _config = config.Value;
-            _summarryAgent = summaryAgent;
+            _client = client;
         }
 
-        public async Task<IContext> Contextualize(IEnumerable<IEnumerable<ExecutableResponse>> asks)
+        public async Task<IContext?> Contextualize(List<string> information, IContext? currentContext = null)
         {
-            var information = asks.SelectMany(a => a.Where(r => r.Response is string).Select(r => r.Response as string)).Aggregate((a, b) => $"<Question>{a}</Question><Answer>{b}</Answer>\n");
             if (information == null)
             {
-                return Context.Empty;
+                return currentContext ?? Context.Empty;
             }
-            return await ContextualizeInternal(information);
+            return await ContextualizeInternal(information, currentContext);
         }
 
-        public async Task<IContext> ContextualizeInternal(string information)
+        public async Task<IContext?> ContextualizeInternal(List<string> information, IContext? context)
         {
-            return await Task.FromResult(Context.Empty);
-        }
-
-        private async Task<string> GetSummary(string information)
-        {
-            var wordCount = information.Split(' ').Length;
-            if (wordCount <= _config.SummaryLengthThreshold)
+            var promptName = _config.BaseContextualizePromptFile;
+            if (string.IsNullOrWhiteSpace(promptName))
             {
-                return information;
+                throw new ArgumentException("BaseContextualizePromptFile is not set in the configuration.");
             }
+            var backdrop = context == null ? "" : await GetBackdrop(context);
+            Prompt prompt = new(promptName)
+            {
+                Arguments = new Dictionary<string, object> { 
+                    ["information"] = information, 
+                    ["backdrop"] = backdrop,
+                    ["context_schema"] = JsonSchema.FromType<Context>().ToJson()
+                }
+            };
+            string? modelName = _config.Model;
+            string response;
+            if (string.IsNullOrWhiteSpace(modelName))
+            {
+                (response, _) = await _client.ProcessContinuousConversationAsync(prompt, []);
+            }
+            else
+            {
+                (response, _) = await _client.ProcessContinuousConversationAsync(prompt, [], model: modelName);
+            }
+            // parse the response json to get the Context object.
+            return Context.FromJson(response);
+        }
 
-            return await Task.FromResult(information);
+        public Task<string> GetBackdrop(IContext context)
+        {
+            var script_file = _config.ContextAsBackdropPromptFile;
+            if (string.IsNullOrEmpty(script_file))
+            {
+                throw new Exception("ContextAsBackdropPromptFile is not set in the configuration.");
+            }
+            var script_file_text = File.ReadAllText(Path.Combine("./Prompt", script_file));
+            var prompt = Template.Parse(script_file_text);
+            return Task.FromResult(prompt.Render(new { context }));
         }
     }
 }

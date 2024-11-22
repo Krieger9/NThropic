@@ -1,0 +1,17 @@
+{{ if backdrop.Parent }}
+	While discussing 
+	{{ if backdrop.Parent.Summary.Length > 0 }}
+		{{ backdrop.Parent.Summary }}
+	{{ else }}
+		{{ backdrop.Parent.Details}}
+	{{ end }}}}
+	, the team delved a bit deeper and the discussion went more into the following.
+{{ end }}
+
+{{ if backdrop.Summary }}
+	Basically..
+	{{ backdrop.Summary }}
+{{ end }}}}
+
+Explicitly....
+{{ backdrop.Details }}

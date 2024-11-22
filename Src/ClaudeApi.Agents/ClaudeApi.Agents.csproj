@@ -10,6 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.2.24473.5" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0-rc.2.24473.5" />
     <PackageReference Include="NJsonSchema" Version="11.0.2" />
+    <PackageReference Include="Scriban" Version="5.11.0" />
     <PackageReference Include="System.Reactive" Version="6.0.1" />
   </ItemGroup>
 

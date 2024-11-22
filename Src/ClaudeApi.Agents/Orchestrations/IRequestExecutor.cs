@@ -1,6 +1,6 @@
 using ClaudeApi.Agents.Agents;
 using ClaudeApi.Agents.Agents.Converters;
-using ClaudeApi.Agents.Contexts;
+using ClaudeApi.Agents.ContextCore;
 using ClaudeApi.Prompts;
 using ClaudeApi.Services;
 
@@ -12,7 +12,9 @@ namespace ClaudeApi.Agents.Orchestrations
 
         IConverterAgent ConverterAgent { get; }
         IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get; }
+        IContextualizeAgent ContextualizeAgent { get; }
         ISmartClient Client { get; }
+        IContext? Context { get; set; }
         IPromptService PromptService { get; }
         IDictionary<string, object> BaseArguments { get; }
 

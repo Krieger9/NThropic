@@ -4,7 +4,9 @@
     "SandBoxBasePath": "d:\\data\\sandbox"
   },
   "ContextualizeAgent": {
-    "ChallengeLevel": "INTERMEDIATE",
-    "SummaryLengthThreshold": 1024
+    "SummaryLengthThreshold": 1024,
+    "ContextAsBackdropPromptFile": "ContextAsBackdrop",
+    "BaseContextualizePromptFile": "ContextualizeAsks",
+    "Model": "claude-3-5-sonnet-20241022"
   }
 }

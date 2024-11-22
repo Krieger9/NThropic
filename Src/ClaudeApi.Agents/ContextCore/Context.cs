@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ClaudeApi.Agents.Orchestrations
+namespace ClaudeApi.Agents.ContextCore
 {
     public class Context : IContext
     {
@@ -12,7 +13,7 @@ namespace ClaudeApi.Agents.Orchestrations
         public IContext? Parent { get; private set; }
         public string Summary { get; set; }
         public string Details { get; set; }
-        public List<IContext> SubContexts { get; private set; } = new List<IContext>();
+        public List<IContext> SubContexts { get; private set; } = [];
 
         public Context(string summary, string details, IContext? parent = null)
         {
@@ -42,6 +43,11 @@ namespace ClaudeApi.Agents.Orchestrations
         void IContext.SetParent(IContext? parent)
         {
             Parent = parent;
+        }
+
+        public static Context? FromJson(string json)
+        {
+            return JsonConvert.DeserializeObject<Context>(json);
         }
     }
 }

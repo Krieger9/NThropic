@@ -1,5 +1,6 @@
 ﻿using ClaudeApi.Agents.Agents;
 using ClaudeApi.Agents.Agents.Converters;
+using ClaudeApi.Agents.ContextCore;
 using ClaudeApi.Prompts;
 using ClaudeApi.Services;
 using Microsoft.Extensions.Configuration;
@@ -17,19 +18,29 @@ namespace ClaudeApi.Agents.Orchestrations
         private static CHALLENGE_LEVEL _defaultChallengeLevel = CHALLENGE_LEVEL.PROFESSIONAL;
 
         // State items.  These are what need to be dealt with to make thread safe.
+        private IContext? _context = null;
+        public IContext? Context
+        {
+            get { return _context; }
+            set { _context = value; }
+        }
         private readonly ObservableCollection<List<ExecutableResponse>> _executables = [];
         private readonly Dictionary<string, object> _baseArguments = [];
         // This sets the default for new IExecutables, it can change so not directly aligned with field _defaultChallengeLevel
         public CHALLENGE_LEVEL DefaultChallengeLevel { get; set; } = _defaultChallengeLevel;
 
+        private readonly IContextualizeAgent _contextualAgent;
         private readonly IConverterAgent _converterAgent;
         private readonly IChallengeLevelAssesementAgent _challengeLevelAssesementAgent;
         private readonly ISmartClient _client;
+
         private readonly IPromptService _promptService;
         private readonly IServiceProvider _serviceProvider;
 
         public IConverterAgent ConverterAgent { get { return _converterAgent; } }
         public IChallengeLevelAssesementAgent ChallengeLevelAssesementAgent { get { return _challengeLevelAssesementAgent; } }
+        public IContextualizeAgent ContextualizeAgent { get { return _contextualAgent; } }
+
         public ISmartClient Client { get { return _client; } }
         public IPromptService PromptService { get { return _promptService; } }
         public IServiceProvider ServiceProvider { get { return _serviceProvider; } }
@@ -45,6 +56,7 @@ namespace ClaudeApi.Agents.Orchestrations
         public RequestExecutor(IConfiguration configuration,
             IConverterAgent genericConverterAgent,
             IChallengeLevelAssesementAgent challengeLevelAssesementAgent,
+            IContextualizeAgent contextualizeAgent,
             ISmartClient client,
             IPromptService promptService,
             IServiceProvider serviceProvider)
@@ -53,6 +65,7 @@ namespace ClaudeApi.Agents.Orchestrations
             _challengeLevelAssesementAgent = challengeLevelAssesementAgent;
             _client = client;
             _converterAgent = genericConverterAgent;
+            _contextualAgent = contextualizeAgent;
             _promptService = promptService;
             _serviceProvider = serviceProvider;
 
@@ -241,7 +254,8 @@ namespace ClaudeApi.Agents.Orchestrations
 
         public IRequestExecutor Contextualize()
         {
-            throw new NotImplementedException();
+            _executables.Add([new(new Contextualize())]);
+            return this;
         }
 
         public string InformationString { get { return string.Join("\n", Information); } }

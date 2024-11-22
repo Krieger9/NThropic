@@ -25,7 +25,7 @@ namespace ClaudeApi.Prompts
         {
             var clonedArguments = Arguments != null
                 ? new Dictionary<string, object>(Arguments)
-                : new Dictionary<string, object>();
+                : [];
 
             if (arguments != null)
             {

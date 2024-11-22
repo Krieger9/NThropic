@@ -94,7 +94,7 @@ namespace CodeAnalyzer
                 .ThenAsk(new Prompt("SystemIntegration"))
                     .Ask(new Prompt("ExternalEffects"))
                     .Ask(new Prompt("MaintenanceProfile"))                
-                //.Contextualize()
+                .Contextualize()
                 .Result();
             executor.Clear();
             return run;

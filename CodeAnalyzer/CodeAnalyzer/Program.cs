@@ -11,6 +11,7 @@ using ClaudeApi;
 using Sanctuary;
 using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.DependencyInjection;
+using ClaudeApi.Agents.Agents;
 
 var serviceCollection = new ServiceCollection();
 ConfigureServices(serviceCollection);
@@ -74,6 +75,7 @@ static void ConfigureServices(IServiceCollection services)
     services.AddTransient<IFileAnalyzer, FileAnalyzer>();
     services.AddTransient<IRequestExecutor, RequestExecutor>();
     services.AddTransient<IConverterAgent, GenericConverterAgent>();
+    services.AddTransient<IContextualizeAgent, ContextualizeAgent>();
     services.AddTransient<ISandboxFileManager, SandboxFileManager>();
     services.AddHttpClient();
     services.AddClaudApi();

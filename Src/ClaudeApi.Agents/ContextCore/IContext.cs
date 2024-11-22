@@ -1,4 +1,4 @@
-﻿namespace ClaudeApi.Agents.Orchestrations
+﻿namespace ClaudeApi.Agents.ContextCore
 {
     public interface IContext
     {
