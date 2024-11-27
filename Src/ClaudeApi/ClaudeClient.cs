@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reflection;
@@ -347,6 +346,7 @@ namespace ClaudeApi
                 Tools = use_tools,
                 StopSequences = [stop_sequence]
             };
+
 
             return await _claudeApiService.SendMessageAsync(request, messages, systemMessage, _contextFiles);
         }

@@ -30,18 +30,18 @@ namespace CodeAnalyzer
             {
                 using FileStream inputStream = new(inputFilePath, FileMode.Open, FileAccess.Read);
                 Console.WriteLine("Analyzing the file...");
-                //                var file_type = await executor
-                //                    .Ask(new Prompt("GetFileType")
-                //                    {
-                //                        //Name = "GetFileType",
-                //                        Arguments = new Dictionary<string, object> {
-                //                                { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
-                //                                { "possible_types", default(FileTypes).GetEnumDescription() }
-                //                        }
-                //                    })
-                //                    .ConvertTo<FileTypes>();
-                //
-                var file_type = FileTypes.Code;
+                var file_type = await executor
+                    .Ask(new Prompt("GetFileType")
+                    {
+                        //Name = "GetFileType",
+                        Arguments = new Dictionary<string, object> {
+                                { "file_contents", await new StreamReader(inputStream).ReadToEndAsync() },
+                                { "possible_types", default(FileTypes).GetEnumDescription() }
+                        }
+                    })
+                    .ConvertTo<FileTypes>();
+
+                //var file_type = FileTypes.Code;
                 WriteFileTypeMessage(file_type);
                 if(file_type == FileTypes.Code)
                 {

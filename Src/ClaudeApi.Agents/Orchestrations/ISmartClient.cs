@@ -17,12 +17,6 @@ namespace ClaudeApi.Agents.Orchestrations
 
         IAsyncEnumerable<string> ProcessContinuousConversationAsync(
             string userInput,
-            List<Message> history,
-            CHALLENGE_LEVEL challengeLevel,
-            List<ContentBlock>? systemMessage = null);
-
-        IAsyncEnumerable<string> ProcessContinuousConversationAsync(
-            string userInput,
             CHALLENGE_LEVEL challengeLevel,
             List<ContentBlock>? systemMessage = null);
 

@@ -1,4 +1,4 @@
-﻿namespace Sanctuary.Cache
+﻿namespace ClaudeApi.Cache
 {
     public class CacheItem<TKey, TValue>
     {

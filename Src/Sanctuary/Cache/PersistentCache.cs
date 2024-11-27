@@ -1,26 +1,33 @@
-﻿using System;
+﻿using ClaudeApi;
+using ClaudeApi.Agents.Cache;
+using ClaudeApi.Cache;
 using System.Collections.Concurrent;
-using System.IO;
-using System.Threading.Tasks;
+using System.Text;
+using System.Threading.Channels;
 
 namespace Sanctuary.Cache
 {
-    public class PersistentCache<TKey, TValue> where TKey : notnull
+    public class PersistentCache : IPersistentCache
     {
-        private readonly ICacheStorage<TKey, TValue> _storage;
-        private readonly ConcurrentDictionary<TKey, CacheItem<TKey, TValue>> _memoryCache;
+        private readonly IRequestCacheStorage _storage;
+        private readonly ConcurrentDictionary<ICacheKey, CacheItem<ICacheKey, string>> _memoryCache;
         private readonly TimeSpan _defaultTtl;
         private readonly int _maxItems;
         private readonly object _cleanupLock = new();
         private DateTime _lastCleanup = DateTime.UtcNow;
 
+        public bool Exists(ICacheKey key)
+        {
+            return _memoryCache.ContainsKey(key);
+        }
+
         public PersistentCache(
-            ICacheStorage<TKey, TValue> storage,
+            IRequestCacheStorage storage,
             TimeSpan? defaultTtl = null,
             int maxItems = 1000)
         {
             _storage = storage;
-            _memoryCache = new ConcurrentDictionary<TKey, CacheItem<TKey, TValue>>();
+            _memoryCache = new ConcurrentDictionary<ICacheKey, CacheItem<ICacheKey, string>>();
             _defaultTtl = defaultTtl ?? TimeSpan.FromHours(1);
             _maxItems = maxItems;
         }
@@ -34,9 +41,25 @@ namespace Sanctuary.Cache
             }
         }
 
-        public async Task SetAsync(TKey key, TValue value, TimeSpan? ttl = null)
+        public void AddChannelListener(ICacheKey key, ChannelReader<string> reader, TimeSpan? ttl = null)
         {
-            var item = new CacheItem<TKey, TValue>(
+            _ = Task.Run(async () =>
+            {
+                var value = new StringBuilder();
+                await foreach (var item in reader.ReadAllAsync())
+                {
+                    value.Append(item);
+                }
+                if (value.Length > 0)
+                {
+                    await SetAsync(key, value.ToString(), ttl);
+                }
+            });
+        }
+
+        public async Task SetAsync(ICacheKey key, string value, TimeSpan? ttl = null)
+        {
+            var item = new CacheItem<ICacheKey, string>(
                 key,
                 value,
                 DateTime.UtcNow.Add(ttl ?? _defaultTtl)
@@ -48,7 +71,7 @@ namespace Sanctuary.Cache
             await CleanupIfNeededAsync();
         }
 
-        public async Task<(bool exists, TValue? value)> TryGetAsync(TKey key)
+        public async Task<(bool exists, string? value)> TryGetAsync(ICacheKey key)
         {
             if (_memoryCache.TryGetValue(key, out var item) && item.IsValid)
             {
@@ -64,7 +87,7 @@ namespace Sanctuary.Cache
             return (false, default);
         }
 
-        public async Task RemoveAsync(TKey key)
+        public async Task RemoveAsync(ICacheKey key)
         {
             _memoryCache.TryRemove(key, out _);
             await _storage.RemoveAsync(key);

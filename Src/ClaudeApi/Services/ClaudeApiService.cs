@@ -43,8 +43,6 @@ namespace ClaudeApi.Services
             List<ContentBlock>? systemMessage = null,
             List<string>? _contextFiles = null)
         {
-
-
             _logger.LogInformation("Sending streaming request to Claude API. Model: {Model}, MaxTokens: {MaxTokens}, Temperature: {Temperature}",
                 request.Model, request.MaxTokens, request.Temperature);
 
