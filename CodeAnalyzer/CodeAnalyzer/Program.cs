@@ -79,7 +79,7 @@ static void ConfigureServices(IServiceCollection services)
     services.AddTransient<IConverterAgent, GenericConverterAgent>();
     services.AddTransient<IContextualizeAgent, ContextualizeAgent>();
     services.AddTransient<ISandboxFileManager, SandboxFileManager>();
-    services.AddTransient<IPersistentCache, PersistentCache>();
+    services.AddSingleton<IPersistentCache, PersistentCache>();
     services.AddTransient<IRequestCacheStorage, FileCacheStorage>();
     services.AddHttpClient();
     services.AddClaudApi();

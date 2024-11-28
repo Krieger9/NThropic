@@ -55,7 +55,16 @@ namespace ClaudeApi.Agents.Agents
                 (response, _) = await _client.ProcessContinuousConversationAsync(prompt, [], model: modelName);
             }
             // parse the response json to get the Context object.
-            return Context.FromJson(response);
+            try
+            {
+                var created_context = Context.FromJson(response);
+
+                return created_context;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error parsing the response from the contextualize prompt: {ex.Message}");
+            }
         }
 
         public Task<string> GetBackdrop(IContext context)

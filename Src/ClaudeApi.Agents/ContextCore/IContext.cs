@@ -1,5 +1,8 @@
-﻿namespace ClaudeApi.Agents.ContextCore
+﻿using Newtonsoft.Json;
+
+namespace ClaudeApi.Agents.ContextCore
 {
+    [JsonConverter(typeof(ContextConverter))]
     public interface IContext
     {
         IContext? Parent { get; }

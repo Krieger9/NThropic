@@ -1,12 +1,8 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ClaudeApi.Agents.ContextCore
 {
+    [JsonConverter(typeof(ContextConverter))]
     public class Context : IContext
     {
         public static IContext Empty { get; } = new Context("Empty", "Empty");
