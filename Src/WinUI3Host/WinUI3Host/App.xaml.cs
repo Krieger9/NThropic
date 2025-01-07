@@ -57,7 +57,7 @@ namespace WinUI3Host
             services.AddLogging();
             services.AddTransient<ClaudeClient>()
                 .AddClaudApi()
-                .AddNThropicAgents();
+                .AddNThropicAgents(configuration);
 
             // Register additional dependencies for MainViewModel as transient
             services.AddTransient<IChatViewModel, ChatViewModel>();

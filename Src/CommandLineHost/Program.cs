@@ -66,7 +66,7 @@ class Program
         ));
 
         // Register NThropic agents
-        services.AddNThropicAgents();
+        services.AddNThropicAgents(configuration);
         // Optionally, configure other services here
     }
 }

@@ -72,7 +72,7 @@ namespace ClaudeApi.Agents.Orchestrations
                 var (model, maxTokens, temperature) = GetSettings(challengeLevel);
                 var result = _client.ProcessContinuousConversationAsync(initialMessages, systemMessage, model, maxTokens, temperature);
 
-                StringBuilder compositeResult = new StringBuilder();
+                StringBuilder compositeResult = new ();
 
                 await foreach(var item in result)
                 {
@@ -90,11 +90,11 @@ namespace ClaudeApi.Agents.Orchestrations
             List<ContentBlock>? systemMessage = null)
         {
             var key = new PromptCacheKey(prompt);
-            var cacheResult = await _requestCache.TryGetAsync(key);
+            var (exists, value) = await _requestCache.TryGetAsync(key);
 
-            if (cacheResult.exists)
+            if (exists)
             {
-                return (cacheResult.value, prompt.Name);
+                return (value ?? "", prompt.Name);
             }
 
             var (model, maxTokens, temperature) = GetSettings(challengeLevel);
