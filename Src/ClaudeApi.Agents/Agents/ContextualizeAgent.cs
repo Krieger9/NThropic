@@ -19,7 +19,7 @@ namespace ClaudeApi.Agents.Agents
             _client = client;
         }
 
-        public async Task<IContext?> Contextualize(List<string> information, IContext? currentContext = null)
+        public async Task<IContext?> Contextualize(IEnumerable<string> information, IContext? currentContext = null)
         {
             if (information == null)
             {
@@ -28,7 +28,7 @@ namespace ClaudeApi.Agents.Agents
             return await ContextualizeInternal(information, currentContext);
         }
 
-        public async Task<IContext?> ContextualizeInternal(List<string> information, IContext? context)
+        public async Task<IContext?> ContextualizeInternal(IEnumerable<string> information, IContext? context)
         {
             var promptName = _config.BaseContextualizePromptFile;
             if (string.IsNullOrWhiteSpace(promptName))
@@ -72,7 +72,7 @@ namespace ClaudeApi.Agents.Agents
             var script_file = _config.ContextAsBackdropPromptFile;
             if (string.IsNullOrEmpty(script_file))
             {
-                throw new Exception("ContextAsBackdropPromptFile is not set in the configuration.");
+                throw new Exception($"{_config.ContextAsBackdropPromptFile} Prompt File is not set in the configuration.");
             }
             var script_file_text = File.ReadAllText(Path.Combine("./Prompt", script_file));
             var prompt = Template.Parse(script_file_text);

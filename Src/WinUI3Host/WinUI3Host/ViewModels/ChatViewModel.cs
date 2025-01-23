@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace WinUI3Host.ViewModels
 {
-    public class ChatViewModel : IChatViewModel
+    public partial class ChatViewModel : IChatViewModel
     {
         private TaskCompletionSource<string> _promptCompletionSource;
         private readonly ObservableCollection<Message> _messages = [];

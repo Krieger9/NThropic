@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="SantoriniAI.Controls.CellView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SantoriniAI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Canvas x:Name="CellCanvas">
+        <Viewbox Stretch="Uniform"
+          Width="{Binding ActualWidth, ElementName=CellCanvas}"
+          Height="{Binding ActualHeight, ElementName=CellCanvas}">
+            <Grid>
+                <Image Source="{Binding BackgroundImage}" Stretch="Fill"/>
+                <Image Source="{Binding DevelopmentImage}" Stretch="Fill" Canvas.ZIndex="1"/>
+            </Grid>
+        </Viewbox>
+    </Canvas>
+</UserControl>

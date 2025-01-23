@@ -6,6 +6,7 @@ namespace ClaudeApi.Agents.ContextCore
     public interface IContext
     {
         IContext? Parent { get; }
+        string Title { get; }
         string Summary { get; }
         string Details { get; }
         List<IContext> SubContexts { get; }

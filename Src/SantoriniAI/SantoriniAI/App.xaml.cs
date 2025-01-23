@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
+using SantoriniAI.Models;
+using SantoriniAI.ViewModels;
 using System;
 using System.Threading.Tasks;
 
@@ -39,6 +41,9 @@ namespace SantoriniAI
             // Register your services and view models here
             services.AddSingleton<IServiceProvider>(serviceProvider => serviceProvider);
             services.AddTransient<MainWindow>();
+            services.AddTransient<MainWindowViewModel>();
+            services.AddTransient<CellViewModel>();
+            services.AddTransient<Cell>();
             services.AddLogging();
            
             return services.BuildServiceProvider();
@@ -49,7 +54,9 @@ namespace SantoriniAI
             try
             {
                 var mainWindow = Services.GetRequiredService<MainWindow>();
-                mainWindow.Activate();
+                var viewModel = Services.GetRequiredService<MainWindowViewModel>();
+                mainWindow.SetDataContext(viewModel);
+                mainWindow.EnsureWindowDisplay(1024, 768);
                 return;
             }
             catch (Exception ex)

@@ -7,9 +7,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="SantoriniAI">
+    Title="SantoriniAI"
+    xmlns:controls="using:SantoriniAI.Controls">
 
-    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-        <Button x:Name="MyButton" Click="MyButton_Click">Click Me</Button>
-    </StackPanel>
+    <Grid x:Name="Root">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+        <controls:CellView DataContext="{Binding Cell}" Grid.Row="0"/>
+        <Button x:Name="MyButton" Click="MyButton_Click" Grid.Row="1">Click Me</Button>
+    </Grid>
 </Window>

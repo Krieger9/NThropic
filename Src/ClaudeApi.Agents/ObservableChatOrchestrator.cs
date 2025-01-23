@@ -9,6 +9,7 @@ using ClaudeApi.Agents.Tools;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using ClaudeApi.Agents.Agents;
 
 namespace ClaudeApi.Agents
 {
@@ -20,14 +21,16 @@ namespace ClaudeApi.Agents
 
         private readonly ClaudeClient _client;
         private readonly IReactiveUserInterface _userInterface;
+        private readonly ContextualizeAgent _contextualizeAgent;
 
-        public ObservableChatOrchestrator(ClaudeClient client, IReactiveUserInterface userInterface)
+        public ObservableChatOrchestrator(ClaudeClient client, IReactiveUserInterface userInterface, ContextualizeAgent contextualizeAgent)
         {
             _client = client;
             _userInterface = userInterface;
             _userInterface.Subscribe(MessageHistory.Messages);
             _userInterface.Subscribe(_client.UsageStream);
             _userInterface.SubscribeToContextFiles(_client.ContextFilesStream);
+            _contextualizeAgent = contextualizeAgent;
 
             _messageHistory.Messages.CollectionChanged += OnMessagesCollectionChanged;
         }

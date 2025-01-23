@@ -4,54 +4,57 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 
-public class FilesListViewModel : IFilesListViewModel
+namespace WinUI3Host.ViewModels
 {
-    private ObservableCollection<string> _files;
-
-    public ObservableCollection<string> Files
+    public partial class FilesListViewModel : IFilesListViewModel
     {
-        get { return _files; }
-        set
+        private ObservableCollection<string> _files;
+
+        public ObservableCollection<string> Files
         {
-            if (_files != null)
+            get { return _files; }
+            set
             {
-                _files.CollectionChanged -= OnFilesCollectionChanged;
+                if (_files != null)
+                {
+                    _files.CollectionChanged -= OnFilesCollectionChanged;
+                }
+
+                _files = value;
+
+                if (_files != null)
+                {
+                    _files.CollectionChanged += OnFilesCollectionChanged;
+                }
+
+                OnPropertyChanged(nameof(Files));
             }
+        }
 
-            _files = value;
+        public FilesListViewModel()
+        {
+            _files = [];
+        }
 
-            if (_files != null)
+        public void Subscribe(IObservable<List<string>> filesObservable)
+        {
+            filesObservable.Subscribe(files =>
             {
-                _files.CollectionChanged += OnFilesCollectionChanged;
-            }
+                Files = new ObservableCollection<string>(files);
+            });
+        }
 
+        private void OnFilesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            // Handle collection changes if needed
             OnPropertyChanged(nameof(Files));
         }
-    }
 
-    public FilesListViewModel()
-    {
-        _files = new ObservableCollection<string>();
-    }
+        public event PropertyChangedEventHandler PropertyChanged;
 
-    public void Subscribe(IObservable<List<string>> filesObservable)
-    {
-        filesObservable.Subscribe(files =>
+        protected void OnPropertyChanged(string propertyName)
         {
-            Files = new ObservableCollection<string>(files);
-        });
-    }
-
-    private void OnFilesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-    {
-        // Handle collection changes if needed
-        OnPropertyChanged(nameof(Files));
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    protected void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

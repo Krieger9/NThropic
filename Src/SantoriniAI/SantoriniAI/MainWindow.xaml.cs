@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
+using SantoriniAI.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,23 +27,37 @@ namespace SantoriniAI
     /// </summary>
     public sealed partial class MainWindow : Window
     {
+        private MainWindowViewModel? _viewModel;
+        private MainWindowViewModel ViewModel => _viewModel ?? throw new InvalidOperationException("ViewModel is not set");
+
         public MainWindow()
         {
             this.InitializeComponent();
-            SetWindowSize(1024, 768);
         }
 
-        private void SetWindowSize(int width, int height)
+        public void EnsureWindowDisplay(int width, int height)
         {
             var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             var windowId = Win32Interop.GetWindowIdFromWindow(hWnd);
             AppWindow appWindow = AppWindow.GetFromWindowId(windowId);
+            appWindow.Move(new PointInt32(100, 100));
             appWindow.Resize(new SizeInt32(width, height));
+            this.Activate();
         }
 
         private void MyButton_Click(object sender, RoutedEventArgs e)
         {
-            MyButton.Content = "Clicked";
+            ViewModel.DevelopCell();
+        }
+
+        internal void SetDataContext(MainWindowViewModel viewModel)
+        {
+            if(viewModel == null)
+            {
+                throw new ArgumentNullException(nameof(viewModel));
+            }
+            _viewModel = viewModel;
+            Root.DataContext = ViewModel;
         }
     }
 }

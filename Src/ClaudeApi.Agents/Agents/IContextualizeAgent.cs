@@ -9,8 +9,8 @@ namespace ClaudeApi.Agents.Agents
 {
     public interface IContextualizeAgent
     {
-        Task<IContext?> Contextualize(List<string> information, IContext? currentContext = null);
-        Task<IContext?> ContextualizeInternal(List<string> information, IContext? context);
+        Task<IContext?> Contextualize(IEnumerable<string> information, IContext? currentContext = null);
+        Task<IContext?> ContextualizeInternal(IEnumerable<string> information, IContext? context);
         Task<string> GetBackdrop(IContext context);
     }
 }

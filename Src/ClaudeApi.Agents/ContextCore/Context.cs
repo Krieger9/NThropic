@@ -5,14 +5,16 @@ namespace ClaudeApi.Agents.ContextCore
     [JsonConverter(typeof(ContextConverter))]
     public class Context : IContext
     {
-        public static IContext Empty { get; } = new Context("Empty", "Empty");
+        public static IContext Empty { get; } = new Context("Empty Context", "Empty", "Empty");
         public IContext? Parent { get; private set; }
+        public string Title { get; set; }
         public string Summary { get; set; }
         public string Details { get; set; }
         public List<IContext> SubContexts { get; private set; } = [];
 
-        public Context(string summary, string details, IContext? parent = null)
+        public Context(string title, string summary, string details, IContext? parent = null)
         {
+            Title = title;
             Summary = summary;
             Details = details;
             Parent = parent;
