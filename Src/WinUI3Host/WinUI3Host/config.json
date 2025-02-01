@@ -1,6 +1,12 @@
 {
+  "AppSettings": {
+    "AppName": "WinUI3Host"
+  },
   "ClaudeApiKey": "",
   "Sanctuary": {
     "SandboxBasePath": "d:\\data\\sandbox"
+  },
+  "Telemetry": {
+    "InstrumentationKey": ""
   }
 }

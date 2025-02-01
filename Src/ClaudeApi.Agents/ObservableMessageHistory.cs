@@ -12,7 +12,7 @@ namespace ClaudeApi.Agents
     public class ObservableMessageHistory : IObservableMessageHistory, IDisposable
     {
         private readonly Subject<Message> _messageSubject = new();
-        private readonly ObservableCollection<Message> _messages = new();
+        private readonly ObservableCollection<Message> _messages = [];
 
         public ObservableCollection<Message> Messages
         {
@@ -51,6 +51,7 @@ namespace ClaudeApi.Agents
         public void Dispose()
         {
             _messageSubject.Dispose();
+            GC.SuppressFinalize(this);
         }
     }
 }

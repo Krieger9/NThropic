@@ -41,12 +41,17 @@ namespace WinUI3Host
                 .AddUserSecrets<App>()
                 .Build();
 
+            // Retrieve appName and telemetryInstrumentationKey from configuration
+            var appName = configuration["AppSettings:AppName"];
+            var telemetryInstrumentationKey = configuration["Telemetry:InstrumentationKey"];
+
             // Register configuration
             services.AddSingleton<IConfiguration>(configuration);
             services.AddHttpClient<IClaudeApiService, ClaudeApiService>();
 
             // Register your services and view models here
             services.AddSingleton<IServiceProvider>(serviceProvider => serviceProvider);
+            TelemetryInitializer.Initialize(appName, telemetryInstrumentationKey);
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<IReactiveUserInterface>(serviceProvider => serviceProvider.GetRequiredService<MainViewModel>());
             services.AddTransient<MainWindow>();

@@ -6,6 +6,6 @@ using System.ComponentModel;
 
 public interface IFilesListViewModel : INotifyPropertyChanged
 {
-    ObservableCollection<string> Files { get; set; }
+    ObservableCollection<string>? Files { get; set; }
     void Subscribe(IObservable<List<string>> fies);
 }

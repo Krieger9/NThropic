@@ -6,9 +6,9 @@ using System.ComponentModel;
 
 public class FilesListViewModel : IFilesListViewModel
 {
-    private ObservableCollection<string> _files;
+    private ObservableCollection<string>? _files;
 
-    public ObservableCollection<string> Files
+    public ObservableCollection<string>? Files
     {
         get { return _files; }
         set
@@ -42,13 +42,13 @@ public class FilesListViewModel : IFilesListViewModel
         });
     }
 
-    private void OnFilesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void OnFilesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         // Handle collection changes if needed
         OnPropertyChanged(nameof(Files));
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     protected void OnPropertyChanged(string propertyName)
     {
