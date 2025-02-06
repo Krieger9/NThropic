@@ -50,7 +50,7 @@ namespace ClaudeApi.Agents.ChatTracking.OpenTelemetry
 
             conversation.Messages.Add(entry);
 
-            // Retrieve the conversation activity to use as parent
+            // Retrieve the conversation activity to use as parentInstrumentationKey
             if (_conversationActivities.TryGetValue(entry.ConversationId, out var conversationActivity))
             {
                 // Create a child activity for this message

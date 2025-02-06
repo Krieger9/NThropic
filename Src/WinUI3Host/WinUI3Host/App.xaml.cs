@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Sanctuary;
 using System;
+using WinUI3Host.Telemetry;
 using WinUI3Host.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -22,6 +23,9 @@ namespace WinUI3Host
     /// </summary>
     public partial class App : Application
     {
+        private const string AppNameKey = "AppSettings:AppName";
+        private const string TelemetryConnectionStringKey = "Telemetry:ConnectionString";
+
         public IServiceProvider Services { get; }
 
         public App()
@@ -42,8 +46,19 @@ namespace WinUI3Host
                 .Build();
 
             // Retrieve appName and telemetryInstrumentationKey from configuration
-            var appName = configuration["AppSettings:AppName"];
-            var telemetryInstrumentationKey = configuration["Telemetry:InstrumentationKey"];
+            var appName = configuration[AppNameKey];
+            var telemetryInstrumentationKey = configuration[TelemetryConnectionStringKey];
+
+            // Validate configuration values
+            if (string.IsNullOrEmpty(appName))
+            {
+                throw new InvalidOperationException($"{AppNameKey} is not configured.");
+            }
+
+            if (string.IsNullOrEmpty(telemetryInstrumentationKey))
+            {
+                throw new InvalidOperationException($"{TelemetryConnectionStringKey} is not configured.");
+            }
 
             // Register configuration
             services.AddSingleton<IConfiguration>(configuration);

@@ -11,7 +11,7 @@ namespace ClaudeApi.Messages
     public class Message : INotifyPropertyChanged
     {
         private string? _role;
-        private ObservableCollection<ContentBlock>? _content = new();
+        private ObservableCollection<ContentBlock>? _content = [];
 
         [JsonProperty("role")]
         public string? Role
@@ -43,17 +43,14 @@ namespace ClaudeApi.Messages
 
         public void AppendContent(ContentBlock contentBlock)
         {
-            if (_content is null)
-            {
-                _content = new ObservableCollection<ContentBlock>();
-            }
+            _content ??= [];
             _content.Add(contentBlock);
             OnPropertyChanged(nameof(Content));
         }
 
         public override string ToString()
         {
-            return $"{Role}: {string.Join("", Content?.Select(cb => cb.ToString()) ?? Enumerable.Empty<string>())}";
+            return $"{Role}: {string.Join("", Content?.Select(cb => cb.ToString()) ?? [])}";
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -82,7 +79,7 @@ namespace ClaudeApi.Messages
             JToken? contentToken = jo["content"];
             if (contentToken?.Type == JTokenType.String)
             {
-                message.Content = new ObservableCollection<ContentBlock> { ContentBlock.FromString(contentToken.ToString()) };
+                message.Content = [ContentBlock.FromString(contentToken.ToString())];
             }
             else if (contentToken?.Type == JTokenType.Array)
             {

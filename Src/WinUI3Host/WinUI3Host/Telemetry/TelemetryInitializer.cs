@@ -4,29 +4,32 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using Azure.Monitor.OpenTelemetry.Exporter;
 
-public static class TelemetryInitializer
+namespace WinUI3Host.Telemetry
 {
-    private static TracerProvider? _tracerProvider;
-    private static MeterProvider? _meterProvider;
-
-    public static void Initialize(string serviceName, string connectionString)
+    public static class TelemetryInitializer
     {
-        _tracerProvider = Sdk.CreateTracerProviderBuilder()
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
-            .AddSource(serviceName) // Ensures traces are captured from this app and any library using the same source
-            .AddAzureMonitorTraceExporter(o => o.ConnectionString = connectionString)
-            .Build();
+        private static TracerProvider? _tracerProvider;
+        private static MeterProvider? _meterProvider;
 
-        _meterProvider = Sdk.CreateMeterProviderBuilder()
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
-            .AddMeter(serviceName)
-            .AddAzureMonitorMetricExporter(o => o.ConnectionString = connectionString)
-            .Build();
-    }
+        public static void Initialize(string serviceName, string connectionString)
+        {
+            _tracerProvider = Sdk.CreateTracerProviderBuilder()
+                .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+                .AddSource(serviceName) // Ensures traces are captured from this app and any library using the same source
+                .AddAzureMonitorTraceExporter(o => o.ConnectionString = connectionString)
+                .Build();
 
-    public static void Shutdown()
-    {
-        _tracerProvider?.Dispose();
-        _meterProvider?.Dispose();
+            _meterProvider = Sdk.CreateMeterProviderBuilder()
+                .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+                .AddMeter(serviceName)
+                .AddAzureMonitorMetricExporter(o => o.ConnectionString = connectionString)
+                .Build();
+        }
+
+        public static void Shutdown()
+        {
+            _tracerProvider?.Dispose();
+            _meterProvider?.Dispose();
+        }
     }
 }

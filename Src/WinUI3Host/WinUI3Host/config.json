@@ -7,6 +7,6 @@
     "SandboxBasePath": "d:\\data\\sandbox"
   },
   "Telemetry": {
-    "InstrumentationKey": ""
+    "ConnectionString": ""
   }
 }

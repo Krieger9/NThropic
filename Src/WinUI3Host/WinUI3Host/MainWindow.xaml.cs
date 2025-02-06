@@ -14,7 +14,6 @@ namespace WinUI3Host
     public sealed partial class MainWindow : Window
     {
         public MainViewModel ViewModel { get; }
-        private IServiceProvider ServiceProvider { get; }
 
         public MainWindow(MainViewModel viewModel)
         {

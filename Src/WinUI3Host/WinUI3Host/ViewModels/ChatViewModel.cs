@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace WinUI3Host.ViewModels
 {
-    public class ChatViewModel : IChatViewModel
+    public partial class ChatViewModel : IChatViewModel
     {
         private TaskCompletionSource<string>? _promptCompletionSource;
         private readonly ObservableCollection<Message> _messages = [];
@@ -67,11 +67,14 @@ namespace WinUI3Host.ViewModels
                 foreach (Message newMessage in e.NewItems)
                 {
                     newMessage.PropertyChanged += OnMessagePropertyChanged;
-                    foreach (var contentBlock in newMessage.Content)
+                    if (newMessage.Content != null)
                     {
-                        if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                        foreach (var contentBlock in newMessage.Content)
                         {
-                            notifyPropertyChanged.PropertyChanged += OnContentBlockPropertyChanged;
+                            if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                            {
+                                notifyPropertyChanged.PropertyChanged += OnContentBlockPropertyChanged;
+                            }
                         }
                     }
                 }
@@ -82,11 +85,14 @@ namespace WinUI3Host.ViewModels
                 foreach (Message oldMessage in e.OldItems)
                 {
                     oldMessage.PropertyChanged -= OnMessagePropertyChanged;
-                    foreach (var contentBlock in oldMessage.Content)
+                    if (oldMessage.Content != null)
                     {
-                        if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                        foreach (var contentBlock in oldMessage.Content)
                         {
-                            notifyPropertyChanged.PropertyChanged -= OnContentBlockPropertyChanged;
+                            if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                            {
+                                notifyPropertyChanged.PropertyChanged -= OnContentBlockPropertyChanged;
+                            }
                         }
                     }
                 }

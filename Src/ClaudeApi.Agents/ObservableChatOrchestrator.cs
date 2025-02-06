@@ -9,6 +9,7 @@ using ClaudeApi.Agents.Tools;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using ClaudeApi.Agents.ChatTracking;
 
 namespace ClaudeApi.Agents
 {
@@ -60,6 +61,7 @@ namespace ClaudeApi.Agents
         public async Task StartConversationAsync()
         {
             _client.DiscoverTools(typeof(TestTools).Assembly);
+            var conversation = new Conversation();
             while (true)
             {
                 string userInput = await _userInterface.PromptAsync();

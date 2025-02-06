@@ -22,7 +22,7 @@ namespace WinUI3Host.Views.Controls
 {
     public sealed partial class ChatControl : UserControl
     {
-        public IChatViewModel ChatData { get; set; }
+        public IChatViewModel? ChatData { get; set; }
         public ChatControl()
         {
             this.InitializeComponent();
@@ -36,16 +36,18 @@ namespace WinUI3Host.Views.Controls
                 if (shiftState.HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
                 {
                     // Shift+Enter: Add a new line
-                    var textBox = sender as TextBox;
-                    int caretIndex = textBox.SelectionStart;
-                    textBox.Text = textBox.Text.Insert(caretIndex, "\n");
-                    textBox.SelectionStart = caretIndex + 1;
+                    if (sender is TextBox textBox)
+                    {
+                        int caretIndex = textBox.SelectionStart;
+                        textBox.Text = textBox.Text.Insert(caretIndex, "\n");
+                        textBox.SelectionStart = caretIndex + 1;
+                    }
                 }
                 else
                 {
                     // Enter: Send the message
                     e.Handled = true;
-                    if (ChatData.SendMessageCommand.CanExecute())
+                    if (ChatData != null && ChatData.SendMessageCommand.CanExecute())
                     {
                         ChatData.SendMessageCommand.Execute(R3.Unit.Default);
                     }

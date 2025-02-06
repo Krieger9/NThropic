@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace WinUI3Host.ViewModels
 {
-    public class MainViewModel(
+    public partial class MainViewModel(
             IChatViewModel chatViewModel,
             IUsageStatsViewModel lastRequestUsageStats,
             IUsageStatsViewModel totalUsageStats,
@@ -21,7 +21,7 @@ namespace WinUI3Host.ViewModels
         private readonly IUsageStatsViewModel _lastRequestUsageStats = lastRequestUsageStats;
         private readonly IUsageStatsViewModel _totalUsageStats = totalUsageStats;
         private readonly IFilesListViewModel _fileListViewModel = fileListViewModel;
-        private IDisposable _usageSubscription;
+        private IDisposable? _usageSubscription;
 
         public ObservableCollection<Message> Messages => _chatViewModel.Messages;
 
@@ -37,7 +37,7 @@ namespace WinUI3Host.ViewModels
         public IUsageStatsViewModel TotalUsageStats => _totalUsageStats;
         public IFilesListViewModel FilesListViewModel => _fileListViewModel;
 
-        public event PropertyChangedEventHandler PropertyChanged
+        public event PropertyChangedEventHandler? PropertyChanged
         {
             add => _chatViewModel.PropertyChanged += value;
             remove => _chatViewModel.PropertyChanged -= value;
