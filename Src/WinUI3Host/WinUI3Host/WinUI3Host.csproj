@@ -17,6 +17,7 @@
     <NoWarn>$(NoWarn);CA1416</NoWarn>
 
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Templates\Templates.xaml" />
@@ -28,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.4.0-beta.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0-rc.2.24473.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.0-rc.2.24473.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0-rc.2.24473.5" />

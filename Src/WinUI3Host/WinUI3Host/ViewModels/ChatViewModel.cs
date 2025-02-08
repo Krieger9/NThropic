@@ -12,7 +12,7 @@ namespace WinUI3Host.ViewModels
 {
     public partial class ChatViewModel : IChatViewModel
     {
-        private TaskCompletionSource<string> _promptCompletionSource;
+        private TaskCompletionSource<string>? _promptCompletionSource;
         private readonly ObservableCollection<Message> _messages = [];
         public ObservableCollection<Message> Messages => _messages;
 
@@ -60,18 +60,21 @@ namespace WinUI3Host.ViewModels
             });
         }
 
-        private void OnMessagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnMessagesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
                 foreach (Message newMessage in e.NewItems)
                 {
                     newMessage.PropertyChanged += OnMessagePropertyChanged;
-                    foreach (var contentBlock in newMessage.Content)
+                    if (newMessage.Content != null)
                     {
-                        if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                        foreach (var contentBlock in newMessage.Content)
                         {
-                            notifyPropertyChanged.PropertyChanged += OnContentBlockPropertyChanged;
+                            if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                            {
+                                notifyPropertyChanged.PropertyChanged += OnContentBlockPropertyChanged;
+                            }
                         }
                     }
                 }
@@ -82,30 +85,33 @@ namespace WinUI3Host.ViewModels
                 foreach (Message oldMessage in e.OldItems)
                 {
                     oldMessage.PropertyChanged -= OnMessagePropertyChanged;
-                    foreach (var contentBlock in oldMessage.Content)
+                    if (oldMessage.Content != null)
                     {
-                        if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                        foreach (var contentBlock in oldMessage.Content)
                         {
-                            notifyPropertyChanged.PropertyChanged -= OnContentBlockPropertyChanged;
+                            if (contentBlock is INotifyPropertyChanged notifyPropertyChanged)
+                            {
+                                notifyPropertyChanged.PropertyChanged -= OnContentBlockPropertyChanged;
+                            }
                         }
                     }
                 }
             }
         }
 
-        private void OnMessagePropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnMessagePropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Messages));
         }
 
-        private void OnContentBlockPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnContentBlockPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Messages));
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -128,7 +134,7 @@ namespace WinUI3Host.ViewModels
             }
         }
 
-        private void OnModelMessagesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnModelMessagesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {

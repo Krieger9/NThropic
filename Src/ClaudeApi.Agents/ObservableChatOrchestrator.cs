@@ -1,21 +1,18 @@
-﻿using ClaudeApi.Messages;
-using ClaudeApi.Agents;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ClaudeApi.Agents.ChatTracking;
+using ClaudeApi.Agents.ChatTracking.OpenTelemetry;
 using ClaudeApi.Agents.Tools;
-using System.Collections.ObjectModel;
+using ClaudeApi.Messages;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using ClaudeApi.Agents.Agents;
+using System.Text;
 
 namespace ClaudeApi.Agents
 {
     public partial class ObservableChatOrchestrator
     {
         private readonly ObservableMessageHistory _messageHistory = new();
+        private readonly IConversationLogger _conversationLogger;
 
         public ObservableMessageHistory MessageHistory => _messageHistory;
 
@@ -23,10 +20,11 @@ namespace ClaudeApi.Agents
         private readonly IReactiveUserInterface _userInterface;
         private readonly ContextualizeAgent _contextualizeAgent;
 
-        public ObservableChatOrchestrator(ClaudeClient client, IReactiveUserInterface userInterface, ContextualizeAgent contextualizeAgent)
+        public ObservableChatOrchestrator(ClaudeClient client, IReactiveUserInterface userInterface, IConversationLogger conversationLogger, IContextualizeAgent contextualizeAgent)
         {
             _client = client;
             _userInterface = userInterface;
+            _conversationLogger = conversationLogger;
             _userInterface.Subscribe(MessageHistory.Messages);
             _userInterface.Subscribe(_client.UsageStream);
             _userInterface.SubscribeToContextFiles(_client.ContextFilesStream);
@@ -63,39 +61,68 @@ namespace ClaudeApi.Agents
         public async Task StartConversationAsync()
         {
             _client.DiscoverTools(typeof(TestTools).Assembly);
-            while (true)
+            var conversation = new Conversation();
+            _conversationLogger.SaveConversation(conversation);
+
+            try
             {
-                string userInput = await _userInterface.PromptAsync();
-                if (string.IsNullOrEmpty(userInput))
+                while (true)
                 {
-                    break;
+                    string userInput = await _userInterface.PromptAsync();
+                    if (string.IsNullOrEmpty(userInput))
+                    {
+                        break;
+                    }
+
+                    var userMessage = new Message
+                    {
+                        Role = "user",
+                        Content = [ContentBlock.FromString(userInput)]
+                    };
+
+                    _messageHistory.AddMessage(userMessage);
+
+                    // Log user message
+                    _conversationLogger.LogMessage(new MessageLogEntry
+                    {
+                        ConversationId = conversation.ConversationId,
+                        Content = userInput,
+                        Type = MessageType.User
+                    });
+
+                    var streamContentTask = _client.ProcessContinuousConversationAsync(
+                        [.. _messageHistory.Messages],
+                        systemMessage: [ContentBlock.FromString(SystemPrompt)]);
+
+                    var userInputContentBlock = ContentBlock.FromString();
+                    var assistantMessage = new Message
+                    {
+                        Role = "assistant",
+                        Content = [userInputContentBlock]
+                    };
+                    _messageHistory.AddMessage(assistantMessage);
+
+                    var assistantContentBuilder = new StringBuilder();
+                    await foreach (var streamContent in streamContentTask)
+                    {
+                        _userInterface.UpdateContentBlockText(userInputContentBlock, streamContent);
+                        assistantContentBuilder.Append(streamContent);
+                        await Task.Delay(50);
+                    }
+
+                    // Log assistant message
+                    _conversationLogger.LogMessage(new MessageLogEntry
+                    {
+                        ConversationId = conversation.ConversationId,
+                        Content = assistantContentBuilder.ToString(),
+                        Type = MessageType.Agent,
+                        AgentName = "Claude"
+                    });
                 }
-
-                var userMessage = new Message
-                {
-                    Role = "user",
-                    Content = [ ContentBlock.FromString(userInput) ]
-                };
-
-                _messageHistory.AddMessage(userMessage);
-
-                var streamContentTask = _client.ProcessContinuousConversationAsync(
-                    [.. _messageHistory.Messages],
-                    systemMessage: [ ContentBlock.FromString(SystemPrompt) ]);
-
-                var userInputContentBlock = ContentBlock.FromString();
-                var assistantMessage = new Message
-                {
-                    Role = "assistant",
-                    Content = [ userInputContentBlock ]
-                };
-                _messageHistory.AddMessage(assistantMessage);
-
-                await foreach (var streamContent in streamContentTask)
-                {
-                    _userInterface.UpdateContentBlockText(userInputContentBlock, streamContent);
-                    await Task.Delay(50);
-                }
+            }
+            finally
+            {
+                _conversationLogger.EndConversation(conversation.ConversationId);
             }
         }
     }

@@ -1,5 +1,7 @@
 ﻿using ClaudeApi;
 using ClaudeApi.Agents;
+using ClaudeApi.Agents.ChatTracking;
+using ClaudeApi.Agents.ChatTracking.OpenTelemetry;
 using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.DependencyInjection;
 using ClaudeApi.Messages;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Sanctuary;
 using System;
+using WinUI3Host.Telemetry;
 using WinUI3Host.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -22,6 +25,9 @@ namespace WinUI3Host
     /// </summary>
     public partial class App : Application
     {
+        private const string AppNameKey = "AppSettings:AppName";
+        private const string TelemetryConnectionStringKey = "Telemetry:ConnectionString";
+
         public IServiceProvider Services { get; }
 
         public App()
@@ -41,12 +47,28 @@ namespace WinUI3Host
                 .AddUserSecrets<App>()
                 .Build();
 
+            // Retrieve appName and telemetryInstrumentationKey from configuration
+            var appName = configuration[AppNameKey];
+            var telemetryInstrumentationKey = configuration[TelemetryConnectionStringKey];
+
+            // Validate configuration values
+            if (string.IsNullOrEmpty(appName))
+            {
+                throw new InvalidOperationException($"{AppNameKey} is not configured.");
+            }
+
+            if (string.IsNullOrEmpty(telemetryInstrumentationKey))
+            {
+                throw new InvalidOperationException($"{TelemetryConnectionStringKey} is not configured.");
+            }
+
             // Register configuration
             services.AddSingleton<IConfiguration>(configuration);
             services.AddHttpClient<IClaudeApiService, ClaudeApiService>();
 
             // Register your services and view models here
             services.AddSingleton<IServiceProvider>(serviceProvider => serviceProvider);
+            TelemetryInitializer.Initialize(appName, telemetryInstrumentationKey);
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<IReactiveUserInterface>(serviceProvider => serviceProvider.GetRequiredService<MainViewModel>());
             services.AddTransient<MainWindow>();
@@ -58,6 +80,9 @@ namespace WinUI3Host
             services.AddTransient<ClaudeClient>()
                 .AddClaudApi()
                 .AddNThropicAgents(configuration);
+
+            // Register OpenTelemetryConversationLogger with the appName
+            services.AddSingleton<IConversationLogger>(provider => new OpenTelemetryConversationLogger(appName));
 
             // Register additional dependencies for MainViewModel as transient
             services.AddTransient<IChatViewModel, ChatViewModel>();
