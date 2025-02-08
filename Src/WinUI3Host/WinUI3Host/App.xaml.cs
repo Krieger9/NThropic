@@ -1,5 +1,7 @@
 ﻿using ClaudeApi;
 using ClaudeApi.Agents;
+using ClaudeApi.Agents.ChatTracking;
+using ClaudeApi.Agents.ChatTracking.OpenTelemetry;
 using ClaudeApi.Agents.DependencyInjection;
 using ClaudeApi.DependencyInjection;
 using ClaudeApi.Messages;
@@ -78,6 +80,9 @@ namespace WinUI3Host
             services.AddTransient<ClaudeClient>()
                 .AddClaudApi()
                 .AddNThropicAgents(configuration);
+
+            // Register OpenTelemetryConversationLogger with the appName
+            services.AddSingleton<IConversationLogger>(provider => new OpenTelemetryConversationLogger(appName));
 
             // Register additional dependencies for MainViewModel as transient
             services.AddTransient<IChatViewModel, ChatViewModel>();

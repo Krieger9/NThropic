@@ -4,8 +4,12 @@ namespace ClaudeApi.Agents.ChatTracking.OpenTelemetry
 {
     public class OpenTelemetryConversationLogger : IConversationLogger
     {
-        // Create an ActivitySource for all our tracing
-        private static readonly ActivitySource ActivitySource = new("AgentLogging");
+        private readonly ActivitySource _activitySource;
+
+        public OpenTelemetryConversationLogger(string activitySourceName)
+        {
+            _activitySource = new ActivitySource(activitySourceName);
+        }
 
         // In-memory stores for conversation data and their associated activities
         private readonly Dictionary<Guid, Conversation> _conversations = [];
@@ -22,7 +26,7 @@ namespace ClaudeApi.Agents.ChatTracking.OpenTelemetry
             }
 
             // Start a new conversation activity with the parent context (if available)
-            var conversationActivity = ActivitySource.StartActivity(
+            var conversationActivity = _activitySource.StartActivity(
                 "Conversation",
                 ActivityKind.Internal,
                 parentContext);
@@ -54,9 +58,9 @@ namespace ClaudeApi.Agents.ChatTracking.OpenTelemetry
             if (_conversationActivities.TryGetValue(entry.ConversationId, out var conversationActivity))
             {
                 // Create a child activity for this message
-                var messageActivity = ActivitySource.StartActivity(
+                var messageActivity = _activitySource.StartActivity(
                     "Message",
-                    ActivityKind.Internal,
+                    GetActivityKind(entry.Type),
                     conversationActivity.Context);
 
                 if (messageActivity != null)
@@ -73,6 +77,18 @@ namespace ClaudeApi.Agents.ChatTracking.OpenTelemetry
                     messageActivity.Stop();
                 }
             }
+        }
+
+        private ActivityKind GetActivityKind(MessageType messageType)
+        {
+            return messageType switch
+            {
+                MessageType.User => ActivityKind.Client,
+                MessageType.Agent => ActivityKind.Server,
+                MessageType.System => ActivityKind.Internal,
+                MessageType.ToolCall => ActivityKind.Internal,
+                _ => ActivityKind.Internal
+            };
         }
 
         public Conversation? GetConversation(Guid conversationId)
