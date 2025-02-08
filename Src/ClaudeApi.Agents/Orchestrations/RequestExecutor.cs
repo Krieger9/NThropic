@@ -145,11 +145,11 @@ namespace ClaudeApi.Agents.Orchestrations
             return this;
         }
 
-        public IRequestExecutor Learn()
-        {
-            _executables.Add()
-            return this;
-        }
+//        public IRequestExecutor Learn()
+//        {
+//            //_executables.Add()
+//            return this;
+//        }
 
         public async Task<string> Result()
         {

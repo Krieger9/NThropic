@@ -21,9 +21,10 @@ namespace ClaudeApi.Agents.ContextCore
             switch (contextType)
             {
                 case "Context":
+                    var title = jsonObject["Title"]?.Value<string>() ?? string.Empty;
                     var summary = jsonObject["Summary"]?.Value<string>() ?? string.Empty;
                     var details = jsonObject["Details"]?.Value<string>() ?? string.Empty;
-                    context = new Context(summary, details);
+                    context = new Context(title, summary, details);
                     break;
                 // Add cases for other IContext implementations
                 default:

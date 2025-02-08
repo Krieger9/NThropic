@@ -10,12 +10,60 @@
     Title="SantoriniAI"
     xmlns:controls="using:SantoriniAI.Controls">
 
-    <Grid x:Name="Root">
+    <Grid x:Name="Root" Padding="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="3*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls:CellView DataContext="{Binding Cell}" Grid.Row="0"/>
-        <Button x:Name="MyButton" Click="MyButton_Click" Grid.Row="1">Click Me</Button>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Add CellView controls to each cell in the 5x5 grid with explicit size -->
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="0" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="1" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="2" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="3" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="4" Width="100" Height="100"/>
+
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="0" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="1" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="2" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="3" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="4" Width="100" Height="100"/>
+
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="0" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="1" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="2" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="3" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="4" Width="100" Height="100"/>
+
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="0" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="1" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="2" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="3" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="4" Width="100" Height="100"/>
+
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="0" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="1" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="2" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="3" Width="100" Height="100"/>
+            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="4" Width="100" Height="100"/>
+        </Grid>
+
+        <Button x:Name="MyButton" Click="MyButton_Click" Grid.Row="1" HorizontalAlignment="Stretch">Click Me</Button>
     </Grid>
 </Window>

@@ -9,7 +9,7 @@
     mc:Ignorable="d">
 
     <Canvas x:Name="CellCanvas">
-        <Viewbox Stretch="Uniform"
+        <Viewbox Stretch="Fill"
           Width="{Binding ActualWidth, ElementName=CellCanvas}"
           Height="{Binding ActualHeight, ElementName=CellCanvas}">
             <Grid>

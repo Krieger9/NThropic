@@ -18,7 +18,7 @@ namespace ClaudeApi.Agents
 
         private readonly ClaudeClient _client;
         private readonly IReactiveUserInterface _userInterface;
-        private readonly ContextualizeAgent _contextualizeAgent;
+        private readonly IContextualizeAgent _contextualizeAgent;
 
         public ObservableChatOrchestrator(ClaudeClient client, IReactiveUserInterface userInterface, IConversationLogger conversationLogger, IContextualizeAgent contextualizeAgent)
         {
