@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using SantoriniAI.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,13 +25,51 @@ namespace SantoriniAI.ViewModels
 
         public ObservableCollection<CellViewModel> Cells { get; }
 
-        internal void DevelopCell(CellViewModel? cell = null)
+        private int GetCellIndex(string designator)
         {
-            // Iterate all entries in Cells and call Develop on each one
-            foreach (var c in Cells)
-            {
-                c.Develop();
-            }
+            if (designator.Length != 2)
+                throw new ArgumentException("Invalid designator format. Use format like A1, B2, etc.");
+
+            char columnChar = designator[0];
+            char rowChar = designator[1];
+
+            if (columnChar < 'A' || columnChar > 'E' || rowChar < '1' || rowChar > '5')
+                throw new ArgumentException("Invalid designator format. Use format like A1, B2, etc.");
+
+            int column = columnChar - 'A';
+            int row = '5' - rowChar; // Reverse the row order
+
+            return row * 5 + column;
+        }
+
+        public void DevelopCell(string designator)
+        {
+            int index = GetCellIndex(designator);
+            Cells[index].Develop();
+        }
+
+        public void SetPawn(string designator, Pawn pawn)
+        {
+            int index = GetCellIndex(designator);
+            Cells[index].SetPawn(pawn);
+        }
+
+        public void ClearPawn(string designator)
+        {
+            int index = GetCellIndex(designator);
+            Cells[index].ClearPawn();
+        }
+
+        public void SetPawnBlack(string designator)
+        {
+            int index = GetCellIndex(designator);
+            Cells[index].SetPawnBlack();
+        }
+
+        public void SetPawnWhite(string designator)
+        {
+            int index = GetCellIndex(designator);
+            Cells[index].SetPawnWhite();
         }
     }
 }

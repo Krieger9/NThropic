@@ -39,7 +39,7 @@ namespace SantoriniAI.ViewModels
             OnPropertyChanged(nameof(PawnImage));
         }
 
-        public void SetPawnNone()
+        public void ClearPawn()
         {
             SetPawn(Pawn.None);
         }
@@ -54,17 +54,17 @@ namespace SantoriniAI.ViewModels
             SetPawn(Pawn.White);
         }
 
+        public void Develop()
+        {
+            model.Develop();
+            OnPropertyChanged(nameof(DevelopmentImage));
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        internal void Develop()
-        {
-            model.Develop();
-            OnPropertyChanged(nameof(DevelopmentImage));
         }
     }
 }

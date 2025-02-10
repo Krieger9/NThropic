@@ -47,15 +47,12 @@ namespace SantoriniAI
 
         private void MyButton_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.DevelopCell();
+            ViewModel.DevelopCell("A1");
         }
 
         internal void SetDataContext(MainWindowViewModel viewModel)
         {
-            if(viewModel == null)
-            {
-                throw new ArgumentNullException(nameof(viewModel));
-            }
+            ArgumentNullException.ThrowIfNull(viewModel);
             _viewModel = viewModel;
             Root.DataContext = ViewModel;
         }
