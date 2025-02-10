@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.Design.Serialization;
 using System.Linq;
 using System.Text;
@@ -9,16 +11,26 @@ namespace SantoriniAI.ViewModels
 {
     internal class MainWindowViewModel
     {
-        public MainWindowViewModel(CellViewModel cell)
+        public MainWindowViewModel(IServiceProvider serviceProvider)
         {
-            Cell = cell;
+            Cells = new ObservableCollection<CellViewModel>();
+
+            for (int i = 0; i < 25; i++)
+            {
+                var cellViewModel = serviceProvider.GetRequiredService<CellViewModel>();
+                Cells.Add(cellViewModel);
+            }
         }
 
-        public CellViewModel Cell { get; }
+        public ObservableCollection<CellViewModel> Cells { get; }
 
-        internal void DevelopCell()
+        internal void DevelopCell(CellViewModel? cell = null)
         {
-            Cell.Develop();
+            // Iterate all entries in Cells and call Develop on each one
+            foreach (var c in Cells)
+            {
+                c.Develop();
+            }
         }
     }
 }

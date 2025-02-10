@@ -6,64 +6,45 @@
     xmlns:local="using:SantoriniAI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:SantoriniAI.Controls"
     mc:Ignorable="d"
-    Title="SantoriniAI"
-    xmlns:controls="using:SantoriniAI.Controls">
-
+    Title="SantoriniAI">
     <Grid x:Name="Root" Padding="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <Viewbox Grid.Row="0" Stretch="Uniform">
+            <ItemsControl ItemsSource="{Binding Cells}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <ItemsWrapGrid Orientation="Horizontal" 
+                          MaximumRowsOrColumns="5"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="Black" 
+                    BorderThickness="1" 
+                    Background="Transparent">
+                            <controls:CellView DataContext="{Binding}"
+                                 MinWidth="100" 
+                                 MinHeight="100"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Viewbox>
 
-            <!-- Add CellView controls to each cell in the 5x5 grid with explicit size -->
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="0" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="1" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="2" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="3" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="0" Grid.Column="4" Width="100" Height="100"/>
-
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="0" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="1" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="2" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="3" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="1" Grid.Column="4" Width="100" Height="100"/>
-
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="0" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="1" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="2" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="3" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="2" Grid.Column="4" Width="100" Height="100"/>
-
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="0" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="1" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="2" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="3" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="3" Grid.Column="4" Width="100" Height="100"/>
-
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="0" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="1" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="2" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="3" Width="100" Height="100"/>
-            <controls:CellView DataContext="{Binding Cell}" Grid.Row="4" Grid.Column="4" Width="100" Height="100"/>
-        </Grid>
-
-        <Button x:Name="MyButton" Click="MyButton_Click" Grid.Row="1" HorizontalAlignment="Stretch">Click Me</Button>
+        <Button x:Name="MyButton" 
+                Click="MyButton_Click" 
+                Grid.Row="1" 
+                HorizontalAlignment="Stretch"
+                Margin="0,10,0,0">
+            Click Me
+        </Button>
     </Grid>
 </Window>

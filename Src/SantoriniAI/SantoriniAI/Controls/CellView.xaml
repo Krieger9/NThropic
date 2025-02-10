@@ -7,15 +7,18 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-
-    <Canvas x:Name="CellCanvas">
-        <Viewbox Stretch="Fill"
-          Width="{Binding ActualWidth, ElementName=CellCanvas}"
-          Height="{Binding ActualHeight, ElementName=CellCanvas}">
-            <Grid>
+    <Grid x:Name="RootGrid">
+        <Viewbox Stretch="Uniform">
+            <Grid Width="100" Height="100">
                 <Image Source="{Binding BackgroundImage}" Stretch="Fill"/>
-                <Image Source="{Binding DevelopmentImage}" Stretch="Fill" Canvas.ZIndex="1"/>
+                <Image Source="{Binding DevelopmentImage}" Stretch="Fill"/>
+                <Image Source="{Binding PawnImage}" 
+                       Stretch="Uniform"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Top"
+                       Width="20"
+                       Height="20"/>
             </Grid>
         </Viewbox>
-    </Canvas>
+    </Grid>
 </UserControl>
