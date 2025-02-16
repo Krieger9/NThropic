@@ -12,6 +12,7 @@ namespace ClaudeApi.Services
         void DiscoverTools(Assembly assembly);
         void DiscoverTools(Type type);
         void DiscoverTool(Type type, string methodName);
+        void DiscoverTool<T>(T instance) where T : class;
 
         Task<string> ExecuteToolAsync(string toolName, JObject input, ClaudeClient client, List<Message> messages);
     }

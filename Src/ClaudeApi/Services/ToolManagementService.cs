@@ -17,7 +17,6 @@ namespace ClaudeApi.Services
 
         public ToolManagementService(
             IServiceProvider serviceProvider,
-            IToolRegistry toolRegistry,
             IToolDiscoveryService toolDiscoveryService,
             IToolExecutionService toolExecutionService,
             ILogger<ToolManagementService> logger)
@@ -39,6 +38,15 @@ namespace ClaudeApi.Services
         {
             var tools = _toolDiscoveryService.DiscoverTools(type);
             ToolRegistry.AddTools(tools);
+            _logger.LogInformation("Discovered {ToolCount} tools from type {TypeName}", tools.Count, type.Name);
+        }
+
+
+        public void DiscoverTool<T>(T instance) where T : class
+        {
+            var type = typeof(T);
+            var tools = _toolDiscoveryService.DiscoverTools(type);
+            ToolRegistry.AddTools<T>(tools, instance);
             _logger.LogInformation("Discovered {ToolCount} tools from type {TypeName}", tools.Count, type.Name);
         }
 
@@ -87,12 +95,12 @@ namespace ClaudeApi.Services
 
         public List<MessagesRequest.ToolInfo> GetRegisteredTools()
         {
-            return ToolRegistry.Tools.Select(t => new MessagesRequest.ToolInfo
+            return [.. ToolRegistry.Tools.Select(t => new MessagesRequest.ToolInfo
             {
                 Name = t.Name,
                 Description = t.Description,
                 InputSchema = t.InputSchema ?? throw new InvalidOperationException($"{nameof(t.InputSchema)} cannot be null.")
-            }).ToList();
+            })];
         }
     }
 }

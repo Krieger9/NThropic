@@ -33,6 +33,8 @@ namespace SantoriniAI.ViewModels
             }
         }
 
+        public int DevelopmentLevel => model.DevelopementLevel;
+
         public void SetPawn(Pawn pawn)
         {
             model.SetPawn(pawn);
@@ -49,7 +51,7 @@ namespace SantoriniAI.ViewModels
             SetPawn(Pawn.Black);
         }
 
-        public void SetPawnWhite()
+        public void SetWhitePawn()
         {
             SetPawn(Pawn.White);
         }
@@ -58,6 +60,11 @@ namespace SantoriniAI.ViewModels
         {
             model.Develop();
             OnPropertyChanged(nameof(DevelopmentImage));
+        }
+
+        public Pawn GetPawnType()
+        {
+            return model.OccupyingPawn;
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

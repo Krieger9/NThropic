@@ -51,19 +51,21 @@ namespace ClaudeApi
         public void DiscoverTools(Assembly toolAssembly)
         {
             _toolManagementService.DiscoverTools(toolAssembly);
-            _logger.LogInformation("Discovered {ToolCount} tools", _toolManagementService.ToolRegistry.Tools.Count());
         }
 
         public void DiscoverTools(Type type)
         {
             _toolManagementService.DiscoverTools(type);
-            _logger.LogInformation("Discovered {ToolCount} tools from type {TypeName}", _toolManagementService.ToolRegistry.Tools.Count(), type.Name);
         }
 
         public void DiscoverTool(Type type, string methodName)
         {
             _toolManagementService.DiscoverTool(type, methodName);
-            _logger.LogInformation("Discovered {ToolCount} total tools.", _toolManagementService.ToolRegistry.Tools.Count());
+        }
+
+        public void DiscoverTool<T>(T instance) where T : class
+        {
+            _toolManagementService.DiscoverTool<T>(instance);
         }
 
         public IAsyncEnumerable<string> ProcessContinuousConversationAsync(

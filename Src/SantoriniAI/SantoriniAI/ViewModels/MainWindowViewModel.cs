@@ -14,7 +14,7 @@ namespace SantoriniAI.ViewModels
     {
         public MainWindowViewModel(IServiceProvider serviceProvider)
         {
-            Cells = new ObservableCollection<CellViewModel>();
+            Cells = [];
 
             for (int i = 0; i < 25; i++)
             {
@@ -25,7 +25,7 @@ namespace SantoriniAI.ViewModels
 
         public ObservableCollection<CellViewModel> Cells { get; }
 
-        private int GetCellIndex(string designator)
+        private static int GetCellIndex(string designator)
         {
             if (designator.Length != 2)
                 throw new ArgumentException("Invalid designator format. Use format like A1, B2, etc.");
@@ -66,10 +66,65 @@ namespace SantoriniAI.ViewModels
             Cells[index].SetPawnBlack();
         }
 
-        public void SetPawnWhite(string designator)
+        public void SetWhitePawn(string designator)
         {
             int index = GetCellIndex(designator);
-            Cells[index].SetPawnWhite();
+            Cells[index].SetWhitePawn();
+        }
+
+        public string GetDevelopmentLevels()
+        {
+            StringBuilder sb = new();
+
+            for (int i = 0; i < 25; i++)
+            {
+                if (i > 0 && i % 5 == 0)
+                {
+                    sb.AppendLine();
+                }
+                sb.Append(Cells[i].DevelopmentLevel);
+                if (i % 5 != 4)
+                {
+                    sb.Append(' ');
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        public string GetPawnLocations()
+        {
+            List<string> blackPawns = [];
+            List<string> whitePawns = [];
+
+            for (int i = 0; i < 25; i++)
+            {
+                int row = 5 - (i / 5);
+                char column = (char)('A' + (i % 5));
+                string location = $"{column}{row}";
+
+                if (Cells[i].GetPawnType() == Pawn.Black)
+                {
+                    blackPawns.Add(location);
+                }
+                else if (Cells[i].GetPawnType() == Pawn.White)
+                {
+                    whitePawns.Add(location);
+                }
+            }
+
+            return $"Black Pawns: {string.Join(", ", blackPawns)}\nWhite Pawns: {string.Join(", ", whitePawns)}";
+        }
+
+        public string GetBoardState()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine("Board State:");
+            sb.AppendLine("Development Levels:");
+            sb.AppendLine(GetDevelopmentLevels());
+            sb.AppendLine();
+            sb.AppendLine(GetPawnLocations());
+            return sb.ToString();
         }
     }
 }

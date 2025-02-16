@@ -12,6 +12,7 @@ namespace ClaudeApi.Tools
         Dictionary<string, Tool> ValidateAndRegisterTools(List<Tool> tools);
         void AddTool(Tool tool);
         void AddTools(IEnumerable<Tool> tools);
+        public void AddTools<T>(IEnumerable<Tool> tools, T instance) where T : class;
         void RemoveTool(string toolName);
         object GetOrCreateToolInstance(Tool tool);
         bool TryGetTool(string toolName, out Tool? tool);

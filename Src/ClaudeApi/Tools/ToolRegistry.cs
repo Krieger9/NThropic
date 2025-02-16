@@ -45,6 +45,15 @@ namespace ClaudeApi.Tools
             }
         }
 
+        public void AddTools<T>(IEnumerable<Tool> tools, T instance) where T : class
+        {
+            foreach (var tool in tools)
+            {
+                AddTool(tool);
+                SetToolInstance(tool.Name!, instance);
+            }
+        }
+
         public void RemoveTool(string toolName)
         {
             if (!_tools.Remove(toolName))
@@ -120,7 +129,7 @@ namespace ClaudeApi.Tools
             if (!_toolInstances.TryGetValue(tool.Name, out var instance))
             {
                 instance = _serviceProvider.GetRequiredService(tool.Method.DeclaringType);
-                _toolInstances[tool.Name] = instance;
+                SetToolInstance(tool.Name, instance);
             }
             return instance;
         }
@@ -128,6 +137,11 @@ namespace ClaudeApi.Tools
         public bool TryGetTool(string toolName, out Tool? tool)
         {
             return _tools.TryGetValue(toolName, out tool);
+        }
+
+        private void SetToolInstance(string toolName, object instance)
+        {
+            _toolInstances[toolName] = instance;
         }
     }
 }
