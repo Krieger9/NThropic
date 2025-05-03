@@ -1,13 +1,14 @@
 using ClaudeApi.Messages;
 using ClaudeApi.Prompts;
+using System.Reactive.Subjects;
 using System.Reflection;
 
 namespace ClaudeApi
 {
     public interface IClient
     {
-        IObservable<Usage> UsageStream { get; }
-        IObservable<List<string>> ContextFilesStream { get; }
+        Subject<Usage> UsageSubject { get; }
+        Subject<List<string>> ContextFilesSubject { get; }
 
         void DiscoverTools(Assembly toolAssembly);
         void DiscoverTools(Type type);

@@ -8,10 +8,10 @@ namespace ClaudeApi.Messages
 {
 
     [JsonConverter(typeof(MessageConverter))]
-    public class Message : INotifyPropertyChanged
+    public class Message 
     {
         private string? _role;
-        private ObservableCollection<ContentBlock>? _content = [];
+        private List<ContentBlock>? _content = [];
 
         [JsonProperty("role")]
         public string? Role
@@ -28,7 +28,7 @@ namespace ClaudeApi.Messages
         }
 
         [JsonProperty("content")]
-        public ObservableCollection<ContentBlock>? Content
+        public List<ContentBlock>? Content
         {
             get => _content;
             set
@@ -83,7 +83,7 @@ namespace ClaudeApi.Messages
             }
             else if (contentToken?.Type == JTokenType.Array)
             {
-                message.Content = contentToken.ToObject<ObservableCollection<ContentBlock>>(serializer);
+                message.Content = contentToken.ToObject<List<ContentBlock>>(serializer);
             }
             else
             {

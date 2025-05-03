@@ -26,10 +26,11 @@ namespace ClaudeApi
         private readonly IPromptService _promptService;
 
         private readonly Subject<Usage> _usageSubject = new();
-        public IObservable<Usage> UsageStream => _usageSubject.AsObservable();
+        public Subject<Usage> UsageSubject => _usageSubject;
+        //public IObservable<Usage> UsageStream => _usageSubject.AsObservable();
 
         private readonly Subject<List<string>> _contextFilesSubject = new();
-        public IObservable<List<string>> ContextFilesStream => _contextFilesSubject.AsObservable();
+        public Subject<List<string>> ContextFilesSubject => _contextFilesSubject;
 
         public ClaudeClient(ISandboxFileManager sandboxFileManager,
             IToolManagementService toolManagementService,

@@ -24,8 +24,8 @@ namespace ClaudeApi.Agents
             _userInterface = userInterface;
             _conversationLogger = conversationLogger;
             _userInterface.Subscribe(MessageHistory.Messages);
-            _userInterface.Subscribe(_client.UsageStream);
-            _userInterface.SubscribeToContextFiles(_client.ContextFilesStream);
+            _userInterface.Subscribe(_client.UsageSubject);
+            _userInterface.SubscribeToContextFiles(_client.ContextFilesSubject);
 
             _messageHistory.Messages.CollectionChanged += OnMessagesCollectionChanged;
         }
